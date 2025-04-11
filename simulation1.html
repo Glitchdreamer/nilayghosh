@@ -49,18 +49,101 @@ mb = ${mb}
 mY = ${mY}
 Q = ${Q}
 Ta = ${Ta}
-Tb_arr = []
-theta_b_deg_arr = []
-gamma = np.sqrt(((ma*mb)/(mX*mY))*(Ta/(Ta+Q*(1+ma/mX))))
+pa = np.sqrt(2 * ma * Ta)
+Tb_arr=[]
+Tb2_arr=[]
+theta_b_deg_arr=[]
+TY_arr=[]
+TY2_arr=[]
+theta_Y_deg_arr=[]
+theta_Y_deg_arr_cm=[]
+Erel_arr=[]
+Tc_arr=[]
+Td_arr=[]
+coincident=0
+c_single=0
+d_single=0
+theta_b_coincident=[]
+theta_Y_coincident=[]
+theta_b_csingle=[]
+theta_b_dsingle=[]
+theta_Y_dsingle=[]
+theta_Y_csingle=[]
+gamma=np.sqrt(((ma*mb)/(mX*mY))*(Ta/(Ta+Q*(1+ma/mX))))
+gamma_=np.sqrt(((ma*mY)/(mX*mb))*(Ta/(Ta+Q*(1+ma/mX))))
 
-for _ in range(1000):
-    theta_b_cm = np.random.uniform(0,np.pi)
-    theta_b = np.arctan2(np.sin(theta_b_cm), (np.cos(theta_b_cm)+gamma))
+for i in range(1000):
+    theta_b_cm=np.random.uniform(0,np.pi)
+    phi_b_cm=np.random.uniform(0,2*np.pi)
+
+    theta_Y_cm=np.pi-theta_b_cm
+    phi_Y_cm=phi_b_cm+np.pi
+    if phi_Y_cm > 2*np.pi:
+        phi_Y_cm -= 2*np.pi
+
+    theta_b=np.arctan2(np.sin(theta_b_cm),(np.cos(theta_b_cm)+gamma))
     if theta_b < 0:
         theta_b += np.pi
-    Tb_1 = ((np.sqrt(ma*mb*Ta)*np.cos(theta_b)+np.sqrt(ma*mb*Ta*(np.cos(theta_b))**2+(mY+mb)*(mY*Q+mY*Ta-ma*Ta)))/(mY+mb))**2
-    Tb_arr.append(Tb_1)
-    theta_b_deg_arr.append(theta_b * 180 / np.pi)
+    theta_Y=np.arctan2(np.sin(theta_Y_cm),(np.cos(theta_Y_cm)+gamma_))
+    if theta_Y < 0:
+        theta_Y += np.pi
+    
+    theta_b_cm_deg=theta_b_cm*180/np.pi
+    theta_b_deg=theta_b*180/np.pi
+    phi_b=phi_b_cm
+    phi_Y=phi_Y_cm
+    Tb_1=((np.sqrt(ma*mb*Ta)*np.cos(theta_b)+np.sqrt(ma*mb*Ta*(np.cos(theta_b))**2+(mY+mb)*(mY*Q+mY*Ta-ma*Ta)))/(mY+mb))**2
+    Tb_2=((np.sqrt(ma*mb*Ta)*np.cos(theta_b)-np.sqrt(ma*mb*Ta*(np.cos(theta_b))**2+(mY+mb)*(mY*Q+mY*Ta-ma*Ta)))/(mY+mb))**2
+    pb_1 = np.sqrt(2 * mb * Tb_1)
+    pb_2 = np.sqrt(2 * mb * Tb_2)
+    
+    pb_1_z=pb_1*np.cos(theta_b)
+    pb_1_x=pb_1*np.sin(theta_b)*np.cos(phi_b)
+    pb_1_y=pb_1*np.sin(theta_b)*np.sin(phi_b)
+
+    pb_2_z=pb_2*np.cos(theta_b)
+    pb_2_x=pb_2*np.sin(theta_b)*np.cos(phi_b)
+    pb_2_y=pb_2*np.sin(theta_b)*np.sin(phi_b)
+
+    pY_1_z=pa-pb_1_z
+    pY_1_x=-pb_1_x
+    pY_1_y=-pb_1_y
+
+    pY_2_z=pa-pb_2_z
+    pY_2_x=-pb_2_x
+    pY_2_y=-pb_2_y
+
+    theta_Y1=np.arctan2(np.sqrt(pY_1_x*pY_1_x+pY_1_y*pY_1_y),pY_1_z)
+    if theta_Y1 < 0:
+        theta_Y1 += np.pi
+        
+    theta_Y2=np.arctan2(np.sqrt(pY_2_x*pY_2_x+pY_2_y*pY_2_y),pY_2_z)
+    if theta_Y2 < 0:
+        theta_Y2 += np.pi
+    
+    pY_1=np.sqrt(pY_1_z*pY_1_z+pY_1_x*pY_1_x+pY_1_y*pY_1_y)
+    pY_2=np.sqrt(pY_2_z*pY_2_z+pY_2_x*pY_2_x+pY_2_y*pY_2_y)
+
+    TY_1=(pY_1*pY_1)/(2*mY)
+    TY_2=(pY_2*pY_2)/(2*mY)
+    
+    
+    theta_b_deg_arr.append(theta_b_deg)
+
+    theta_Y_cm_deg=theta_Y_cm*180/np.pi
+    theta_Y_deg=theta_Y*180/np.pi
+
+    if abs(theta_Y-theta_Y1) < abs(theta_Y-theta_Y2):
+        Tb = Tb_1
+        TY = TY_1
+    else:
+        Tb = Tb_2
+        TY = TY_2
+
+    TY_arr.append(TY)
+    Tb_arr.append(Tb)
+    theta_Y_deg_arr.append(theta_Y_deg)
+    theta_Y_deg_arr_cm.append(theta_Y_cm_deg)
 
 plt.figure()
 plt.plot(theta_b_deg_arr, Tb_arr, 'o', markersize=2)
