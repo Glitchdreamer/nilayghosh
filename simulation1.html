@@ -47,6 +47,10 @@ ma = ${ma}
 mX = ${mX}
 mb = ${mb}
 mY = ${mY}
+a=ma/931.5
+X=mX/931.5
+b=mb/931.5
+Y=mY/931.5
 Q = ${Q}
 Ta = ${Ta}
 pa = np.sqrt(2 * ma * Ta)
@@ -146,8 +150,8 @@ for i in range(1000):
     theta_Y_deg_arr_cm.append(theta_Y_cm_deg)
 
 plt.figure()
-plt.plot(np.array(theta_b_deg_arr),np.array(Tb_arr)/mb,'o',markersize=3,label='b')
-plt.plot(np.array(theta_Y_deg_arr),np.array(TY_arr)/mY,'o',markersize=3,label='Y')
+plt.plot(np.array(theta_b_deg_arr),np.array(Tb_arr)/b,'o',markersize=3,label='b')
+plt.plot(np.array(theta_Y_deg_arr),np.array(TY_arr)/Y,'o',markersize=3,label='Y')
 plt.ylabel("Energy[Lab-MeV/u]")
 plt.xlabel("Angle[Lab-deg]")
 plt.legend()
