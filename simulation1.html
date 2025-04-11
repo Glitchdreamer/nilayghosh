@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Nuclear Reaction Simulation</title>
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js"></script>
+</head>
+<body>
+  <h1>Nuclear Reaction Simulation</h1>
+  <form id="input-form">
+    <label>ma (amu): <input type="number" id="ma" value="7"></label><br>
+    <label>mX (amu): <input type="number" id="mX" value="12"></label><br>
+    <label>mb (amu): <input type="number" id="mb" value="8"></label><br>
+    <label>mY (amu): <input type="number" id="mY" value="11"></label><br>
+    <label>Q (MeV): <input type="number" id="Q" value="-16.44"></label><br>
+    <label>Ta (MeV): <input type="number" id="Ta" value="35"></label><br>
+    <button type="submit">Run Simulation</button>
+  </form>
+
+  <h3>T<sub>b</sub> vs &theta;<sub>b</sub> (deg):</h3>
+  <div id="output">Waiting for simulation...</div>
+
+  <script>
+    let pyodide;
+    async function main() {
+      pyodide = await loadPyodide();
+      await pyodide.loadPackage(['numpy', 'matplotlib']);
+    }
+    main();
+
+    document.getElementById("input-form").onsubmit = async function(e) {
+      e.preventDefault();
+
+      const ma = parseFloat(document.getElementById("ma").value) * 931.5;
+      const mX = parseFloat(document.getElementById("mX").value) * 931.5;
+      const mb = parseFloat(document.getElementById("mb").value) * 931.5;
+      const mY = parseFloat(document.getElementById("mY").value) * 931.5;
+      const Q = parseFloat(document.getElementById("Q").value);
+      const Ta = parseFloat(document.getElementById("Ta").value);
+
+      const code = `
+import numpy as np
+import matplotlib.pyplot as plt
+import io, base64
+
+ma = ${ma}
+mX = ${mX}
+mb = ${mb}
+mY = ${mY}
+Q = ${Q}
+Ta = ${Ta}
+Tb_arr = []
+theta_b_deg_arr = []
+gamma = np.sqrt(((ma*mb)/(mX*mY))*(Ta/(Ta+Q*(1+ma/mX))))
+
+for _ in range(1000):
+    theta_b_cm = np.random.uniform(0,np.pi)
+    theta_b = np.arctan2(np.sin(theta_b_cm), (np.cos(theta_b_cm)+gamma))
+    if theta_b < 0:
+        theta_b += np.pi
+    Tb_1 = ((np.sqrt(ma*mb*Ta)*np.cos(theta_b)+np.sqrt(ma*mb*Ta*(np.cos(theta_b))**2+(mY+mb)*(mY*Q+mY*Ta-ma*Ta)))/(mY+mb))**2
+    Tb_arr.append(Tb_1)
+    theta_b_deg_arr.append(theta_b * 180 / np.pi)
+
+plt.figure()
+plt.plot(theta_b_deg_arr, Tb_arr, 'o', markersize=2)
+plt.xlabel("θ_b (deg)")
+plt.ylabel("T_b (MeV)")
+plt.title("T_b vs θ_b")
+plt.grid(True)
+
+buf = io.BytesIO()
+plt.savefig(buf, format='png')
+buf.seek(0)
+img_str = base64.b64encode(buf.read()).decode("utf-8")
+img_str
+      `;
+
+      const result = await pyodide.runPythonAsync(code);
+      document.getElementById("output").innerHTML = `<img src="data:image/png;base64,${result}" alt="Tb vs Theta_b">`;
+    }
+  </script>
+</body>
+</html>
