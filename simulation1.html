@@ -146,10 +146,11 @@ for i in range(1000):
     theta_Y_deg_arr_cm.append(theta_Y_cm_deg)
 
 plt.figure()
-plt.plot(theta_b_deg_arr/mb, Tb_arr, 'o', markersize=2)
-plt.plot(theta_Y_deg_arr/mY, Tb_arr, 'o', markersize=2)
-plt.xlabel("Lab Angle (deg)")
-plt.ylabel("Energy (MeV/u)")
+plt.plot(np.array(theta_b_deg_arr),np.array(Tb_arr)/8,'o',markersize=3,label='b')
+plt.plot(np.array(theta_Y_deg_arr),np.array(TY_arr)/11,'o',markersize=3,label='Y')
+plt.ylabel("Energy[Lab-MeV/u]")
+plt.xlabel("Angle[Lab-deg]")
+plt.legend()
 plt.title("Kinematic Plot")
 plt.grid(True)
 
