@@ -1,0 +1,185 @@
+<!DOCTYPE HTML>
+
+<html>
+	<head>
+		<!-- Google tag (gtag.js) -->
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Bengali:wght@100..900&display=swap" rel="stylesheet">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XTZQCQB4W3"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-XTZQCQB4W3');
+</script>
+		<title>About Me</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href="assets/css/main.css" />
+		<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
+		<style>
+
+    /* Styles for desktop (screen width 768 pixels and above) */
+    @media only screen and (min-width: 768px) {
+      .mobile-only {
+        display: none;
+      }
+    }
+
+    /* Styles for mobile (screen width less than 768 pixels) */
+    @media only screen and (max-width: 767px) {
+      .desktop-only {
+        display: none;
+      }
+    }
+			img {
+				max-width: 100%;
+				height: auto;
+			}
+			.bengali {
+				font-family: "Noto Serif Bengali", serif;
+  				font-optical-sizing: auto;
+  				font-weight: 400;
+  				font-style: normal;
+  				font-variation-settings:
+					"wdth" 100;
+			}
+		</style>
+		<meta property="og:url" content="https://nilayghosh.com/about-me.html">
+	</head>
+	<body class="is-preload">
+
+		<!-- Page Wrapper -->
+			<div id="page-wrapper">
+
+				<!-- Header -->
+					<header id="header">
+						<h1><a href="index.html">Nilay Ghosh</a></h1>
+						<nav>
+							<a href="#menu">Menu</a>
+						</nav>
+					</header>
+
+				<!-- Menu -->
+					<nav id="menu">
+						<div class="inner">
+							<h2>Menu</h2>
+							<ul class="links">
+								<li><a href="index.html">Home</a></li>
+								<li><a href="research.html">Research</a></li>
+								<li><a href="publications.html">Publications</a></li>
+								<li><a href="science-fictions.html">Science Fictions</a></li>
+								<li><a href="about-me.html">About Me</a></li>
+								<li><a href="other-activities.html">Other Activities</a></li>
+							</ul>
+							<a href="#" class="close">Close</a>
+						</div>
+					</nav>
+
+				<!-- Wrapper -->
+					<section id="wrapper">
+						<header>
+							<div class="inner">
+								
+								<h2>About Me</h2></h2>
+
+								
+							</div>
+						</header>
+
+						<!-- Content -->
+							<div class="wrapper">
+								<div class="inner">
+								
+									
+								<form id="input-form">
+    <label>ma (amu): <input type="number" id="ma" value="7" step="any"></label>
+    <label>mX (amu): <input type="number" id="mX" value="12" step="any"></label>
+    <label>mb (amu): <input type="number" id="mb" value="8" step="any"></label>
+    <label>mY (amu): <input type="number" id="mY" value="11" step="any"></label>
+    <label>Q (MeV): <input type="number" id="Q" value="-16.44" step="any"></label>
+    <label>Ta (MeV): <input type="number" id="Ta" value="35" step="any"></label>
+    <button type="submit">Run Simulation</button>
+  </form>
+
+  <h3>Simulation Output:</h3>
+  <div id="output">Waiting for simulation...</div>
+
+  <script>
+    document.getElementById("input-form").onsubmit = async function(e) {
+      e.preventDefault();
+
+      const payload = {
+        ma: parseFloat(document.getElementById("ma").value),
+        mX: parseFloat(document.getElementById("mX").value),
+        mb: parseFloat(document.getElementById("mb").value),
+        mY: parseFloat(document.getElementById("mY").value),
+        Q:  parseFloat(document.getElementById("Q").value),
+        Ta: parseFloat(document.getElementById("Ta").value),
+      };
+
+      document.getElementById("output").innerHTML = "Running simulation... ⏳";
+
+      try {
+        const response = await fetch("https://reaction-api-5t55.onrender.com/simulate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+
+        if (data.image) {
+          document.getElementById("output").innerHTML = `<img src="data:image/png;base64,${data.image}" alt="Simulation Result">`;
+        } else if (data.error) {
+          document.getElementById("output").innerHTML = `⚠️ Error: ${data.error}`;
+        }
+      } catch (err) {
+        document.getElementById("output").innerHTML = `❌ Network Error: ${err.message}`;
+      }
+    }
+  </script>
+									
+									
+								</div>
+							</div>
+
+					</section>
+
+				<!-- Footer -->
+					<section id="footer">
+						<div class="inner">
+							<h4>Connect</h4>
+												<ul class="icons">
+													<li><a href="https://x.com/nilayhere" class="icon brands fa-twitter"><span class="label">Twitter</span></a></li>
+													<li><a href="https://facebook.com/nilayhere" class="icon brands fa-facebook-f"><span class="label">Facebook</span></a></li>
+													<li><a href="https://instagram.com/nilayyhere" class="icon brands fa-instagram"><span class="label">Instagram</span></a></li>
+													<li><a href="#" class="icon brands fa-github"><span class="label">Github</span></a></li>
+												</ul>
+							<ul class="contact">
+								
+								<li class="icon solid fa-envelope"><a href="#">nilayghosh000@gmail.com</a></li>
+							</ul>
+							
+	
+							
+							<ul class="copyright">
+								<li>&copy; N Corp. All rights reserved.</li><li>Design: <a href="http://nilayghosh.com">Nilay Ghosh</a></li>
+							</ul>
+						</div>
+					</section>
+
+			</div>
+
+		<!-- Scripts -->
+			<script src="assets/js/jquery.min.js"></script>
+			<script src="assets/js/jquery.scrollex.min.js"></script>
+			<script src="assets/js/browser.min.js"></script>
+			<script src="assets/js/breakpoints.min.js"></script>
+			<script src="assets/js/util.js"></script>
+			<script src="assets/js/main.js"></script>
+
+	</body>
+</html>
