@@ -73,17 +73,19 @@
       <div class="wrapper">
         <div class="inner">
           <form id="input-form">
-            <label>ma (amu): <input type="number" id="ma" value="7" step="any"></label>
-            <label>mX (amu): <input type="number" id="mX" value="12" step="any"></label>
-            <label>mb (amu): <input type="number" id="mb" value="8" step="any"></label>
-            <label>mY (amu): <input type="number" id="mY" value="11" step="any"></label>
-            <label>Ex_b (MeV): <input type="number" id="Ex_b" value="0" step="any"></label>
-            <label>Ex_Y (MeV): <input type="number" id="Ex_Y" value="0" step="any"></label>
-            <label>Ta (MeV): <input type="number" id="Ta" value="35" step="any"></label>
+            <label>Projectile (a): <input type="text" id="a" value="7Be"></label>
+            <label>Target (X): <input type="text" id="X" value="12C"></label>
+            <label>Fragment 1 (b): <input type="text" id="b" value="8Be"></label>
+            <label>Fragment 2 (Y): <input type="text" id="Y" value="11C"></label>
+            <label>Excitation b (MeV): <input type="number" id="Ex_b" value="0" step="any"></label>
+            <label>Excitation Y (MeV): <input type="number" id="Ex_Y" value="0" step="any"></label>
+            <label>Beam energy (Ta, MeV): <input type="number" id="Ta" value="35" step="any"></label>
+            
+      
             <label><input type="checkbox" id="breakup-toggle" onchange="toggleBreakup()"> Break particle <i>b</i> into <i>c</i> + <i>d</i></label>
             <div id="breakup-section" style="display: none; padding-left: 1rem;">
-              <label>mc (amu): <input type="number" id="mc" value="4" step="any"></label>
-              <label>md (amu): <input type="number" id="md" value="4" step="any"></label>
+              <label>Fragment 1 (c): <input type="text" id="c" value="4He"></label>
+              <label>Fragment 2 (d): <input type="text" id="d" value="4He"></label>
 
             </div>
             <button type="submit">Run Simulation</button>
@@ -101,10 +103,10 @@
             document.getElementById("input-form").onsubmit = async function(e) {
               e.preventDefault();
               const payload = {
-                ma: parseFloat(document.getElementById("ma").value),
-                mX: parseFloat(document.getElementById("mX").value),
-                mb: parseFloat(document.getElementById("mb").value),
-                mY: parseFloat(document.getElementById("mY").value),
+                a: document.getElementById("a").value.trim(),
+                X: document.getElementById("X").value.trim(),
+                b: document.getElementById("b").value.trim(),
+                Y: document.getElementById("Y").value.trim(),
                 Ex_b: parseFloat(document.getElementById("Ex_b").value),
                 Ex_Y: parseFloat(document.getElementById("Ex_Y").value),
         
@@ -112,8 +114,9 @@
                 breakup: document.getElementById("breakup-toggle").checked
               };
               if (payload.breakup) {
-                payload.mc = parseFloat(document.getElementById("mc").value);
-                payload.md = parseFloat(document.getElementById("md").value);
+               
+                payload.c = document.getElementById("c").value.trim();
+                payload.d = document.getElementById("d").value.trim();
                
               }
               document.getElementById("output").innerHTML = "Running simulation... ⏳";
