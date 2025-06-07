@@ -181,7 +181,9 @@
         const imgTag = `<img src="data:image/png;base64,${data.image}" alt="Simulation Result"><br>`;
         const csvBlob = new Blob([atob(data.csv)], { type: "text/csv" });
         const csvUrl = URL.createObjectURL(csvBlob);
-        const csvLink = `<a href="${csvUrl}" download="simulation.csv">📥 Download CSV</a>`;
+  
+        const csvLink = `<a href="${csvUrl}" download="simulation.csv"><button type="button">📥 Download CSV</button></a>`;
+
         document.getElementById("output").innerHTML = imgTag + "<br>" + csvLink;
 
         document.getElementById("Q").innerText = data.Q.toFixed(3);
