@@ -65,10 +65,11 @@
               <label>Excitation Y (MeV): <input type="number" id="Ex_Y" value="0" step="any"></label>
               <label>Beam energy (Ta, MeV): <input type="number" id="Ta" value="35" step="any"></label>
 
-              <label class="button" style="display: inline-block;">
-  <input type="checkbox" id="breakup-toggle" onchange="toggleBreakup()" style="margin-right: 8px;">
-  Break particle <i>b</i> into <i>c</i> + <i>d</i>
+              <label style="display: flex; align-items: center; margin: 10px 0;">
+  <input type="checkbox" id="breakup-toggle" onchange="toggleBreakup()" style="margin-right: 10px;">
+  <span class="button" style="margin: 0;">Break particle <i>b</i> into <i>c</i> + <i>d</i></span>
 </label>
+
 
               <div id="breakup-section" style="display: none; padding-left: 1rem;">
                 <label>Fragment 1 (c): <input type="text" id="c" value="He4"></label>
