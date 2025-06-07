@@ -90,20 +90,31 @@
 
         <!-- OUTPUT SECTION -->
         <div class="inner" id="output-panel">
-          <h3>Simulation Output:</h3>
-          <div id="output">Waiting for simulation...</div>
-          <div id="reaction-details" style="display: none; margin-top: 20px;">
-            <h3>Reaction Details</h3>
-            <p><strong>Q-value:</strong> <span id="Q"></span> MeV</p>
-            <p><strong>E<sub>cm</sub>:</strong> <span id="Ecm"></span> MeV</p>
-            <p><strong>Coulomb Barrier V<sub>c</sub>:</strong> <span id="vcb"></span> MeV</p>
-            <h4>Angle Conversion</h4>
-            <label>θ<sub>b</sub><sup>Lab</sup>: <input type="number" id="theta_b_lab" oninput="convertAngles(this.id)" /></label>
-            <label>θ<sub>Y</sub><sup>Lab</sup>: <input type="number" id="theta_Y_lab" oninput="convertAngles(this.id)" /></label>
-            <label>θ<sub>b</sub><sup>CM</sup>: <input type="number" id="theta_b_cm" oninput="convertAngles(this.id)" /></label>
-            <label>θ<sub>Y</sub><sup>CM</sup>: <input type="number" id="theta_Y_cm" oninput="convertAngles(this.id)" /></label>
-          </div>
-        </div>
+  <h3>Simulation Output:</h3>
+  <div style="display: flex; flex-wrap: wrap; gap: 2rem; align-items: flex-start;">
+
+    <!-- Left: Plot -->
+    <div style="flex: 2 1 500px;" id="output">
+      Waiting for simulation...
+    </div>
+
+    <!-- Right: Reaction Info -->
+    <div style="flex: 1 1 300px;" id="reaction-details" style="display: none;">
+      <h3>Reaction Details</h3>
+      <p><strong>Q-value:</strong> <span id="Q"></span> MeV</p>
+      <p><strong>E<sub>cm</sub>:</strong> <span id="Ecm"></span> MeV</p>
+      <p><strong>Coulomb Barrier V<sub>c</sub>:</strong> <span id="vcb"></span> MeV</p>
+      
+      <h4>Angle Conversion</h4>
+      <label>θ<sub>b</sub><sup>Lab</sup>: <input type="number" id="theta_b_lab" oninput="convertAngles(this.id)" /></label>
+      <label>θ<sub>Y</sub><sup>Lab</sup>: <input type="number" id="theta_Y_lab" oninput="convertAngles(this.id)" /></label>
+      <label>θ<sub>b</sub><sup>CM</sup>: <input type="number" id="theta_b_cm" oninput="convertAngles(this.id)" /></label>
+      <label>θ<sub>Y</sub><sup>CM</sup>: <input type="number" id="theta_Y_cm" oninput="convertAngles(this.id)" /></label>
+    </div>
+
+  </div>
+</div>
+
       </div>
     </section>
 
