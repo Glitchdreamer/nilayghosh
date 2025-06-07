@@ -65,13 +65,18 @@
               <label>Excitation Y (MeV): <input type="number" id="Ex_Y" value="0" step="any"></label>
               <label>Beam energy (Ta, MeV): <input type="number" id="Ta" value="35" step="any"></label>
 
-              <label><input type="checkbox" id="breakup-toggle" onchange="toggleBreakup()"> Break particle <i>b</i> into <i>c</i> + <i>d</i></label>
+              <label class="button" style="display: inline-block;">
+  <input type="checkbox" id="breakup-toggle" onchange="toggleBreakup()" style="margin-right: 8px;">
+  Break particle <i>b</i> into <i>c</i> + <i>d</i>
+</label>
+
               <div id="breakup-section" style="display: none; padding-left: 1rem;">
                 <label>Fragment 1 (c): <input type="text" id="c" value="He4"></label>
                 <label>Fragment 2 (d): <input type="text" id="d" value="He4"></label>
               </div>
 
-              <button type="submit">Run Simulation</button>
+              <button type="submit" class="button primary">Run Simulation</button>
+
             </form>
           </div>
 
