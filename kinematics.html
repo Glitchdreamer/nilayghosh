@@ -93,6 +93,21 @@
 
           <h3>Simulation Output:</h3>
           <div id="output">Waiting for simulation...</div>
+          <!-- Add this inside your main container -->
+          <div id="reaction-details" style="display: none; margin-top: 20px;">
+            <h3>Reaction Details</h3>
+            <p><strong>Q-value:</strong> <span id="Q"></span> MeV</p>
+            <p><strong>E<sub>cm</sub>:</strong> <span id="Ecm"></span> MeV</p>
+            <p><strong>Coulomb Barrier V<sub>c</sub>:</strong> <span id="vcb"></span> MeV</p>
+          
+          
+            <h4>Angle Conversion</h4>
+            <label>θ<sub>b</sub><sup>Lab</sup>: <input id="theta_b_lab" oninput="convertAngles(this.id)" /></label>
+            <label>θ<sub>Y</sub><sup>Lab</sup>: <input id="theta_Y_lab" oninput="convertAngles(this.id)" /></label>
+            <label>θ<sub>b</sub><sup>CM</sup>: <input id="theta_b_cm" oninput="convertAngles(this.id)" /></label>
+            <label>θ<sub>Y</sub><sup>CM</sup>: <input id="theta_Y_cm" oninput="convertAngles(this.id)" /></label>
+          </div>
+
 
           <script>
             function toggleBreakup() {
@@ -133,6 +148,11 @@
                   const csvUrl = URL.createObjectURL(csvBlob);
                   const csvLink = `<a href="${csvUrl}" download="simulation.csv">📥 Download CSV</a>`;
                   document.getElementById("output").innerHTML = imgTag + "<br>" + csvLink;
+                  // Show reaction details
+                  document.getElementById("Q").innerText = data.Q.toFixed(3);
+                  document.getElementById("Ecm").innerText = data.Ecm.toFixed(3);
+                  document.getElementById("vcb").innerText = data.vcb.toFixed(3);
+                  document.getElementById("reaction-details").style.display = "block";
                 } else if (data.error) {
                   document.getElementById("output").innerHTML = `⚠️ Error: ${data.error}`;
                 }
