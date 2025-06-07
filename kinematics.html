@@ -106,6 +106,7 @@
             <label>θ<sub>Y</sub><sup>Lab</sup>: <input id="theta_Y_lab" oninput="convertAngles(this.id)" /></label>
             <label>θ<sub>b</sub><sup>CM</sup>: <input id="theta_b_cm" oninput="convertAngles(this.id)" /></label>
             <label>θ<sub>Y</sub><sup>CM</sup>: <input id="theta_Y_cm" oninput="convertAngles(this.id)" /></label>
+    
           </div>
 
 
@@ -160,6 +161,46 @@
                 document.getElementById("output").innerHTML = `❌ Network Error: ${err.message}`;
               }
             };
+            async function convertAngles(changedId) {
+              const val = document.getElementById(changedId).value;
+              if (!val) return;
+
+              let angleType = "";
+              if (changedId === "theta_b_lab") angleType = "theta_lab_b";
+              else if (changedId === "theta_Y_lab") angleType = "theta_lab_Y";
+              else if (changedId === "theta_b_cm") angleType = "theta_cm_b";
+              else if (changedId === "theta_Y_cm") angleType = "theta_cm_Y";
+
+              const payload = {
+                a: document.getElementById("a").value.trim(),
+                X: document.getElementById("X").value.trim(),
+                b: document.getElementById("b").value.trim(),
+                Y: document.getElementById("Y").value.trim(),
+                Ta: parseFloat(document.getElementById("Ta").value),
+                angleType: angleType,
+                angleValue: val
+              };
+
+              try {
+                const res = await fetch("https://reaction-api-5t55.onrender.com/convert-angle", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.error) {
+                  alert("Conversion Error: " + data.error);
+                  return;
+                }
+
+                document.getElementById("theta_b_lab").value = data.theta_lab_b.toFixed(2);
+                document.getElementById("theta_Y_lab").value = data.theta_lab_Y.toFixed(2);
+                document.getElementById("theta_b_cm").value = data.theta_cm_b.toFixed(2);
+                document.getElementById("theta_Y_cm").value = data.theta_cm_Y.toFixed(2);
+              } catch (err) {
+                alert("Failed to convert angles: " + err.message);
+              }
+            }
           </script>
         </div>
       </div>
