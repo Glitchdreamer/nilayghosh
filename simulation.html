@@ -1,80 +1,261 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE HTML>
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>Nuclear Reaction Simulation</title>
-  <script src="https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js"></script>
-</head>
-<body>
-  <h1>Nuclear Reaction Simulation</h1>
-  <form id="input-form">
-    <label>ma (amu): <input type="number" id="ma" value="7"></label><br>
-    <label>mX (amu): <input type="number" id="mX" value="12"></label><br>
-    <label>mb (amu): <input type="number" id="mb" value="8"></label><br>
-    <label>mY (amu): <input type="number" id="mY" value="11"></label><br>
-    <label>Q (MeV): <input type="number" id="Q" value="-16.44"></label><br>
-    <label>Ta (MeV): <input type="number" id="Ta" value="35"></label><br>
-    <button type="submit">Run Simulation</button>
-  </form>
-
-  <h3>Resulting Histogram:</h3>
-  <div id="output">Waiting for simulation...</div>
-
+  <!-- Google tag (gtag.js) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Bengali:wght@100..900&display=swap" rel="stylesheet">
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XTZQCQB4W3"></script>
   <script>
-    let pyodide;
-    async function main() {
-      pyodide = await loadPyodide();
-      await pyodide.loadPackage(['numpy', 'matplotlib']);
-    }
-    main();
-
-    document.getElementById("input-form").onsubmit = async function(e) {
-      e.preventDefault();
-
-      const ma = parseFloat(document.getElementById("ma").value) * 931.5;
-      const mX = parseFloat(document.getElementById("mX").value) * 931.5;
-      const mb = parseFloat(document.getElementById("mb").value) * 931.5;
-      const mY = parseFloat(document.getElementById("mY").value) * 931.5;
-      const Q = parseFloat(document.getElementById("Q").value);
-      const Ta = parseFloat(document.getElementById("Ta").value);
-
-      const code = `
-import numpy as np
-import matplotlib.pyplot as plt
-import io, base64
-
-ma = ${ma}
-mX = ${mX}
-mb = ${mb}
-mY = ${mY}
-Q = ${Q}
-Ta = ${Ta}
-Tb_arr = []
-gamma = np.sqrt(((ma*mb)/(mX*mY))*(Ta/(Ta+Q*(1+ma/mX))))
-
-for _ in range(1000):
-    theta_b_cm = np.random.uniform(0,np.pi)
-    theta_b = np.arctan2(np.sin(theta_b_cm), (np.cos(theta_b_cm)+gamma))
-    if theta_b < 0:
-        theta_b += np.pi
-    Tb_1 = ((np.sqrt(ma*mb*Ta)*np.cos(theta_b)+np.sqrt(ma*mb*Ta*(np.cos(theta_b))**2+(mY+mb)*(mY*Q+mY*Ta-ma*Ta)))/(mY+mb))**2
-    Tb_arr.append(Tb_1)
-
-plt.hist(Tb_arr, bins=50, color='skyblue', edgecolor='black')
-plt.xlabel("T_b (MeV)")
-plt.ylabel("Counts")
-plt.title("Distribution of T_b")
-
-buf = io.BytesIO()
-plt.savefig(buf, format='png')
-buf.seek(0)
-img_str = base64.b64encode(buf.read()).decode("utf-8")
-img_str
-      `;
-
-      const result = await pyodide.runPythonAsync(code);
-      document.getElementById("output").innerHTML = `<img src="data:image/png;base64,${result}" alt="Histogram">`;
-    }
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-XTZQCQB4W3');
   </script>
+  <title>Kinematics</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+  <link rel="stylesheet" href="assets/css/main.css" />
+  <noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
+  <style>
+    @media only screen and (min-width: 768px) {
+      .mobile-only { display: none; }
+    }
+    @media only screen and (max-width: 767px) {
+      .desktop-only { display: none; }
+    }
+    img {
+      max-width: 100%;
+      height: auto;
+    }
+    .bengali {
+      font-family: "Noto Serif Bengali", serif;
+      font-optical-sizing: auto;
+      font-weight: 400;
+      font-style: normal;
+      font-variation-settings: "wdth" 100;
+    }
+    input[type="number"] {
+      color: black;
+    }
+  </style>
+  <meta property="og:url" content="https://nilayghosh.com/kinematics.html">
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+</head>
+<body class="is-preload">
+  <div id="page-wrapper">
+    <header id="header">
+      <h1><a href="index.html">Nilay Ghosh</a></h1>
+      <nav><a href="#menu">Menu</a></nav>
+    </header>
+
+    <nav id="menu">
+      <div class="inner">
+        <h2>Menu</h2>
+        <ul class="links">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="research.html">Research</a></li>
+          <li><a href="publications.html">Publications</a></li>
+          <li><a href="science-fictions.html">Science Fictions</a></li>
+          <li><a href="about-me.html">About Me</a></li>
+          <li><a href="other-activities.html">Other Activities</a></li>
+        </ul>
+        <a href="#" class="close">Close</a>
+      </div>
+    </nav>
+
+    <section id="wrapper">
+      <header>
+        <div class="inner">
+          <h2>Nuclear Reaction Monte Carlo Simulation</h2>
+        </div>
+      </header>
+
+      <div class="wrapper">
+        <div class="inner">
+          <form id="input-form">
+            <label>Projectile (a): <input type="text" id="a" value="Be7"></label>
+            <label>Target (X): <input type="text" id="X" value="C12"></label>
+            <label>Fragment 1 (b): <input type="text" id="b" value="Be8"></label>
+            <label>Fragment 2 (Y): <input type="text" id="Y" value="C11"></label>
+            <label>Excitation b (MeV): <input type="number" id="Ex_b" value="0" step="any"></label>
+            <label>Excitation Y (MeV): <input type="number" id="Ex_Y" value="0" step="any"></label>
+            <label>Beam energy (Ta, MeV): <input type="number" id="Ta" value="35" step="any"></label>
+            
+      
+            <label><input type="checkbox" id="breakup-toggle" onchange="toggleBreakup()"> Break particle <i>b</i> into <i>c</i> + <i>d</i></label>
+            <div id="breakup-section" style="display: none; padding-left: 1rem;">
+              <label>Fragment 1 (c): <input type="text" id="c" value="He4"></label>
+              <label>Fragment 2 (d): <input type="text" id="d" value="He4"></label>
+
+            </div>
+            <button type="submit">Run Simulation</button>
+          </form>
+
+          <h3>Simulation Output:</h3>
+          <div id="output">Waiting for simulation...</div>
+          <div id="plotly-chart" style="width: 100%; height: 500px;"></div>
+
+          <!-- Add this inside your main container -->
+          <div id="reaction-details" style="display: none; margin-top: 20px;">
+            <h3>Reaction Details</h3>
+            <p><strong>Q-value:</strong> <span id="Q"></span> MeV</p>
+            <p><strong>E<sub>cm</sub>:</strong> <span id="Ecm"></span> MeV</p>
+            <p><strong>Coulomb Barrier V<sub>c</sub>:</strong> <span id="vcb"></span> MeV</p>
+          
+          
+            <h4>Angle Conversion</h4>
+            <label>θ<sub>b</sub><sup>Lab</sup>: <input type="number" id="theta_b_lab" oninput="convertAngles(this.id)" /></label>
+            <label>θ<sub>Y</sub><sup>Lab</sup>: <input type="number" id="theta_Y_lab" oninput="convertAngles(this.id)" /></label>
+            <label>θ<sub>b</sub><sup>CM</sup>: <input type="number" id="theta_b_cm" oninput="convertAngles(this.id)" /></label>
+            <label>θ<sub>Y</sub><sup>CM</sup>: <input type="number" id="theta_Y_cm" oninput="convertAngles(this.id)" /></label>
+    
+          </div>
+
+
+          <script>
+            function toggleBreakup() {
+              const section = document.getElementById("breakup-section");
+              section.style.display = document.getElementById("breakup-toggle").checked ? "block" : "none";
+            }
+
+            document.getElementById("input-form").onsubmit = async function(e) {
+              e.preventDefault();
+              const payload = {
+                a: document.getElementById("a").value.trim(),
+                X: document.getElementById("X").value.trim(),
+                b: document.getElementById("b").value.trim(),
+                Y: document.getElementById("Y").value.trim(),
+                Ex_b: parseFloat(document.getElementById("Ex_b").value),
+                Ex_Y: parseFloat(document.getElementById("Ex_Y").value),
+        
+                Ta: parseFloat(document.getElementById("Ta").value),
+                breakup: document.getElementById("breakup-toggle").checked
+              };
+              if (payload.breakup) {
+               
+                payload.c = document.getElementById("c").value.trim();
+                payload.d = document.getElementById("d").value.trim();
+               
+              }
+              document.getElementById("output").innerHTML = "Running simulation... ⏳";
+              try {
+                const response = await fetch("https://reaction-api-5t55.onrender.com/simulate", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(payload)
+                });
+                const data = await response.json();
+                if (data.theta_b_deg && data.Tb && data.theta_Y_deg && data.TY && data.csv) {
+                  const traceB = {
+                    x: data.theta_b_deg,
+                    y: data.Tb,
+                    mode: 'markers',
+                    name: 'b',
+                    marker: { size: 6 }
+                  };
+                  const traceY = {
+                    x: data.theta_Y_deg,
+                    y: data.TY,
+                    mode: 'markers',
+                    name: 'Y',
+                    marker: { size: 6 }
+                  };
+                  const layout = {
+                    title: 'θ vs Energy (MeV/u)',
+                    xaxis: { title: 'Angle [Lab-deg]' },
+                    yaxis: { title: 'Energy [MeV/u]' },
+                    legend: { x: 0.05, y: 0.95 }
+                  };
+                  Plotly.newPlot('plotly-chart', [traceB, traceY], layout);
+                
+                  const csvBlob = new Blob([atob(data.csv)], { type: 'text/csv' });
+                  const csvUrl = URL.createObjectURL(csvBlob);
+                  const csvLink = `<a href="${csvUrl}" download="simulation.csv">📥 Download CSV</a>`;
+                  document.getElementById("output").innerHTML = csvLink;
+                  // Show reaction details
+                  document.getElementById("Q").innerText = data.Q.toFixed(3);
+                  document.getElementById("Ecm").innerText = data.Ecm.toFixed(3);
+                  document.getElementById("vcb").innerText = data.vcb.toFixed(3);
+                  document.getElementById("reaction-details").style.display = "block";
+                } else if (data.error) {
+                  document.getElementById("output").innerHTML = `⚠️ Error: ${data.error}`;
+                }
+              } catch (err) {
+                document.getElementById("output").innerHTML = `❌ Network Error: ${err.message}`;
+              }
+            };
+            async function convertAngles(changedId) {
+              const val = document.getElementById(changedId).value;
+              if (!val) return;
+
+              let angleType = "";
+              if (changedId === "theta_b_lab") angleType = "theta_lab_b";
+              else if (changedId === "theta_Y_lab") angleType = "theta_lab_Y";
+              else if (changedId === "theta_b_cm") angleType = "theta_cm_b";
+              else if (changedId === "theta_Y_cm") angleType = "theta_cm_Y";
+
+              const payload = {
+                a: document.getElementById("a").value.trim(),
+                X: document.getElementById("X").value.trim(),
+                b: document.getElementById("b").value.trim(),
+                Y: document.getElementById("Y").value.trim(),
+                Ta: parseFloat(document.getElementById("Ta").value),
+                Ex_b: parseFloat(document.getElementById("Ex_b").value),
+                Ex_Y: parseFloat(document.getElementById("Ex_Y").value),
+                angleType: angleType,
+                angleValue: val
+              };
+
+              try {
+                const res = await fetch("https://reaction-api-5t55.onrender.com/convert-angle", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.error) {
+                  alert("Conversion Error: " + data.error);
+                  return;
+                }
+
+                document.getElementById("theta_b_lab").value = data.theta_lab_b.toFixed(2);
+                document.getElementById("theta_Y_lab").value = data.theta_lab_Y.toFixed(2);
+                document.getElementById("theta_b_cm").value = data.theta_cm_b.toFixed(2);
+                document.getElementById("theta_Y_cm").value = data.theta_cm_Y.toFixed(2);
+              } catch (err) {
+                alert("Failed to convert angles: " + err.message);
+              }
+            }
+          </script>
+        </div>
+      </div>
+    </section>
+
+    <section id="footer">
+      <div class="inner">
+        <h4>Connect</h4>
+        <ul class="icons">
+          <li><a href="https://x.com/nilayhere" class="icon brands fa-twitter"><span class="label">Twitter</span></a></li>
+          <li><a href="https://facebook.com/nilayhere" class="icon brands fa-facebook-f"><span class="label">Facebook</span></a></li>
+          <li><a href="https://instagram.com/nilayyhere" class="icon brands fa-instagram"><span class="label">Instagram</span></a></li>
+          <li><a href="#" class="icon brands fa-github"><span class="label">Github</span></a></li>
+        </ul>
+        <ul class="contact">
+          <li class="icon solid fa-envelope"><a href="#">nilayghosh000@gmail.com</a></li>
+        </ul>
+        <ul class="copyright">
+          <li>&copy; N Corp. All rights reserved.</li><li>Design: <a href="http://nilayghosh.com">Nilay Ghosh</a></li>
+        </ul>
+      </div>
+    </section>
+  </div>
+  <script src="assets/js/jquery.min.js"></script>
+  <script src="assets/js/jquery.scrollex.min.js"></script>
+  <script src="assets/js/browser.min.js"></script>
+  <script src="assets/js/breakpoints.min.js"></script>
+  <script src="assets/js/util.js"></script>
+  <script src="assets/js/main.js"></script>
 </body>
 </html>
