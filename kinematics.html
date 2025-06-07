@@ -138,99 +138,109 @@
     </section>
   </div>
 
-  <script>
-    function toggleBreakup() {
-      const section = document.getElementById("breakup-section");
-      section.style.display = document.getElementById("breakup-toggle").checked ? "block" : "none";
-    }
+ <script>
+  function toggleBreakup() {
+    const section = document.getElementById("breakup-section");
+    section.style.display = document.getElementById("breakup-toggle").checked ? "block" : "none";
+  }
 
-    document.getElementById("input-form").onsubmit = async function(e) {
-      e.preventDefault();
-      const payload = {
-        a: document.getElementById("a").value.trim(),
-        X: document.getElementById("X").value.trim(),
-        b: document.getElementById("b").value.trim(),
-        Y: document.getElementById("Y").value.trim(),
-        Ex_b: parseFloat(document.getElementById("Ex_b").value),
-        Ex_Y: parseFloat(document.getElementById("Ex_Y").value),
-        Ta: parseFloat(document.getElementById("Ta").value),
-        breakup: document.getElementById("breakup-toggle").checked
-      };
-      if (payload.breakup) {
-        payload.c = document.getElementById("c").value.trim();
-        payload.d = document.getElementById("d").value.trim();
-      }
-      document.getElementById("output").innerHTML = "Running simulation... ⏳";
-      try {
-        const response = await fetch("https://reaction-api-5t55.onrender.com/simulate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
-        const data = await response.json();
-        if (data.image && data.csv) {
-          const imgTag = `<img src="data:image/png;base64,${data.image}" alt="Simulation Result"><br>`;
-          const csvBlob = new Blob([atob(data.csv)], { type: 'text/csv' });
-          const csvUrl = URL.createObjectURL(csvBlob);
-          const csvLink = `<a href="${csvUrl}" download="simulation.csv">📥 Download CSV</a>`;
-          document.getElementById("output").innerHTML = imgTag + "<br>" + csvLink;
-          document.getElementById("Q").innerText = data.Q.toFixed(3);
-          document.getElementById("Ecm").innerText = data.Ecm.toFixed(3);
-          document.getElementById("vcb").innerText = data.vcb.toFixed(3);
-          document.getElementById("reaction-details").style.display = "block";
-          document.getElementById("output-container").style.display = "block";
+  document.getElementById("input-form").onsubmit = async function (e) {
+    e.preventDefault();
 
-        } else if (data.error) {
-          document.getElementById("output").innerHTML = `⚠️ Error: ${data.error}`;
-        }
-      } catch (err) {
-        document.getElementById("output").innerHTML = `❌ Network Error: ${err.message}`;
-      }
+    // 👉 Ensure "Running..." shows immediately and container becomes visible
+    document.getElementById("output-container").style.display = "block";
+    document.getElementById("reaction-details").style.display = "none";
+    document.getElementById("output").innerHTML = "Running simulation... ⏳";
+
+    const payload = {
+      a: document.getElementById("a").value.trim(),
+      X: document.getElementById("X").value.trim(),
+      b: document.getElementById("b").value.trim(),
+      Y: document.getElementById("Y").value.trim(),
+      Ex_b: parseFloat(document.getElementById("Ex_b").value),
+      Ex_Y: parseFloat(document.getElementById("Ex_Y").value),
+      Ta: parseFloat(document.getElementById("Ta").value),
+      breakup: document.getElementById("breakup-toggle").checked,
     };
 
-    async function convertAngles(changedId) {
-      const val = document.getElementById(changedId).value;
-      if (!val) return;
-
-      let angleType = "";
-      if (changedId === "theta_b_lab") angleType = "theta_lab_b";
-      else if (changedId === "theta_Y_lab") angleType = "theta_lab_Y";
-      else if (changedId === "theta_b_cm") angleType = "theta_cm_b";
-      else if (changedId === "theta_Y_cm") angleType = "theta_cm_Y";
-
-      const payload = {
-        a: document.getElementById("a").value.trim(),
-        X: document.getElementById("X").value.trim(),
-        b: document.getElementById("b").value.trim(),
-        Y: document.getElementById("Y").value.trim(),
-        Ta: parseFloat(document.getElementById("Ta").value),
-        Ex_b: parseFloat(document.getElementById("Ex_b").value),
-        Ex_Y: parseFloat(document.getElementById("Ex_Y").value),
-        angleType: angleType,
-        angleValue: val
-      };
-
-      try {
-        const res = await fetch("https://reaction-api-5t55.onrender.com/convert-angle", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
-        const data = await res.json();
-        if (data.error) {
-          alert("Conversion Error: " + data.error);
-          return;
-        }
-
-        document.getElementById("theta_b_lab").value = data.theta_lab_b.toFixed(2);
-        document.getElementById("theta_Y_lab").value = data.theta_lab_Y.toFixed(2);
-        document.getElementById("theta_b_cm").value = data.theta_cm_b.toFixed(2);
-        document.getElementById("theta_Y_cm").value = data.theta_cm_Y.toFixed(2);
-      } catch (err) {
-        alert("Failed to convert angles: " + err.message);
-      }
+    if (payload.breakup) {
+      payload.c = document.getElementById("c").value.trim();
+      payload.d = document.getElementById("d").value.trim();
     }
-  </script>
+
+    try {
+      const response = await fetch("https://reaction-api-5t55.onrender.com/simulate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+
+      if (data.image && data.csv) {
+        const imgTag = `<img src="data:image/png;base64,${data.image}" alt="Simulation Result"><br>`;
+        const csvBlob = new Blob([atob(data.csv)], { type: "text/csv" });
+        const csvUrl = URL.createObjectURL(csvBlob);
+        const csvLink = `<a href="${csvUrl}" download="simulation.csv">📥 Download CSV</a>`;
+        document.getElementById("output").innerHTML = imgTag + "<br>" + csvLink;
+
+        document.getElementById("Q").innerText = data.Q.toFixed(3);
+        document.getElementById("Ecm").innerText = data.Ecm.toFixed(3);
+        document.getElementById("vcb").innerText = data.vcb.toFixed(3);
+        document.getElementById("reaction-details").style.display = "block";
+        document.getElementById("output-container").style.display = "block";
+      } else if (data.error) {
+        document.getElementById("output").innerHTML = `⚠️ Error: ${data.error}`;
+      }
+    } catch (err) {
+      document.getElementById("output").innerHTML = `❌ Network Error: ${err.message}`;
+    }
+  };
+
+  async function convertAngles(changedId) {
+    const val = document.getElementById(changedId).value;
+    if (!val) return;
+
+    let angleType = "";
+    if (changedId === "theta_b_lab") angleType = "theta_lab_b";
+    else if (changedId === "theta_Y_lab") angleType = "theta_lab_Y";
+    else if (changedId === "theta_b_cm") angleType = "theta_cm_b";
+    else if (changedId === "theta_Y_cm") angleType = "theta_cm_Y";
+
+    const payload = {
+      a: document.getElementById("a").value.trim(),
+      X: document.getElementById("X").value.trim(),
+      b: document.getElementById("b").value.trim(),
+      Y: document.getElementById("Y").value.trim(),
+      Ta: parseFloat(document.getElementById("Ta").value),
+      Ex_b: parseFloat(document.getElementById("Ex_b").value),
+      Ex_Y: parseFloat(document.getElementById("Ex_Y").value),
+      angleType: angleType,
+      angleValue: val,
+    };
+
+    try {
+      const res = await fetch("https://reaction-api-5t55.onrender.com/convert-angle", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (data.error) {
+        alert("Conversion Error: " + data.error);
+        return;
+      }
+
+      document.getElementById("theta_b_lab").value = data.theta_lab_b.toFixed(2);
+      document.getElementById("theta_Y_lab").value = data.theta_lab_Y.toFixed(2);
+      document.getElementById("theta_b_cm").value = data.theta_cm_b.toFixed(2);
+      document.getElementById("theta_Y_cm").value = data.theta_cm_Y.toFixed(2);
+    } catch (err) {
+      alert("Failed to convert angles: " + err.message);
+    }
+  }
+</script>
+
 
   <script src="assets/js/jquery.min.js"></script>
   <script src="assets/js/jquery.scrollex.min.js"></script>
