@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Valentine</title>
+
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      background: pink;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+    }
+
+    .container {
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 40px;
+      font-weight: bold;
+      color: #b30059;
+      margin: 0 0 10px 0;
+    }
+
+    button {
+      font-size: 22px;
+      padding: 12px 30px;
+      margin: 20px;
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: 0.3s;
+      user-select: none;
+    }
+
+    #yesBtn {
+      background: #ff3366;
+      color: white;
+    }
+
+    #noBtn {
+      background: white;
+      color: #ff3366;
+      position: absolute; /* important for moving */
+    }
+
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      display: none;
+    }
+
+    .thankyou {
+      display: none;
+      color: white;
+      font-size: 50px;
+      text-align: center;
+      font-weight: 800;
+      text-shadow: 0 6px 18px rgba(0,0,0,0.25);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container" id="main">
+    <h1>Sakshi will you be my Valentine 💖</h1>
+    <button id="yesBtn">Yes</button>
+    <button id="noBtn">No</button>
+  </div>
+
+  <canvas id="canvas"></canvas>
+
+  <div class="thankyou" id="thanks">✨ Thank You 💞 ✨</div>
+
+  <script>
+    const noBtn = document.getElementById("noBtn");
+    const yesBtn = document.getElementById("yesBtn");
+    const main = document.getElementById("main");
+    const canvas = document.getElementById("canvas");
+    const thanks = document.getElementById("thanks");
+
+    // Cycle texts for the "No" button
+    const texts = [
+      "Are you sure?",
+      "Really?",
+      "Try again!",
+      "You sure?",
+      "Haha nice try 😏",
+      "No escape!",
+      "Nice try 😤",
+      "You can't escape love 🖤"
+    ];
+    let index = 0;
+
+    // Place the "No" button initially near the "Yes" button
+    function placeNoBtnInitial() {
+      const rect = yesBtn.getBoundingClientRect();
+      // a bit to the right of Yes
+      noBtn.style.left = (rect.right + 20) + "px";
+      noBtn.style.top = (rect.top) + "px";
+    }
+    // Ensure we set it after layout
+    requestAnimationFrame(placeNoBtnInitial);
+
+    // Move "No" button around + change its text
+    noBtn.addEventListener("click", () => {
+      noBtn.innerText = texts[index % texts.length];
+      index++;
+
+      const padX = 20;
+      const padY = 20;
+
+      // Keep inside viewport
+      const maxX = window.innerWidth - noBtn.offsetWidth - padX;
+      const maxY = window.innerHeight - noBtn.offsetHeight - padY;
+
+      const x = Math.random() * (maxX - padX) + padX;
+      const y = Math.random() * (maxY - padY) + padY;
+
+      noBtn.style.left = x + "px";
+      noBtn.style.top = y + "px";
+    });
+
+    // --- Simple heart/confetti burst on YES ---
+    const ctx = canvas.getContext("2d");
+    let W, H;
+    function resize() {
+      W = canvas.width = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+    }
+    window.addEventListener("resize", resize);
+    resize();
+
+    const particles = [];
+    function rand(min, max) { return Math.random() * (max - min) + min; }
+
+    function spawnBurst(cx, cy, count = 120) {
+      for (let i = 0; i < count; i++) {
+        const angle = rand(0, Math.PI * 2);
+        const speed = rand(2.5, 8);
+        particles.push({
+          x: cx,
+          y: cy,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          g: rand(0.03, 0.08),
+          life: rand(70, 140),
+          size: rand(10, 22),
+          rot: rand(0, Math.PI * 2),
+          vr: rand(-0.08, 0.08),
+          // pink/red/white palette
+          color: ["#ff3366", "#ff5c8a", "#ffffff", "#ff1f5a"][Math.floor(rand(0, 4))]
+        });
+      }
+    }
+
+    function drawHeart(x, y, s, rot, color) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(rot);
+      ctx.scale(s / 32, s / 32);
+      ctx.beginPath();
+      // Heart path (normalized)
+      ctx.moveTo(0, 10);
+      ctx.bezierCurveTo(0, 0, -16, 0, -16, 12);
+      ctx.bezierCurveTo(-16, 24, 0, 28, 0, 40);
+      ctx.bezierCurveTo(0, 28, 16, 24, 16, 12);
+      ctx.bezierCurveTo(16, 0, 0, 0, 0, 10);
+      ctx.closePath();
+      ctx.fillStyle = color;
+      ctx.fill();
+      ctx.restore();
+    }
+
+    let animId = null;
+    function animate() {
+      ctx.clearRect(0, 0, W, H);
+
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.vy += p.g;
+        p.x += p.vx;
+        p.y += p.vy;
+        p.rot += p.vr;
+        p.life--;
+
+        // fade out
+        const alpha = Math.max(0, Math.min(1, p.life / 80));
+        ctx.globalAlpha = alpha;
+
+        drawHeart(p.x, p.y, p.size, p.rot, p.color);
+
+        if (p.life <= 0 || p.y > H + 60) particles.splice(i, 1);
+      }
+      ctx.globalAlpha = 1;
+
+      animId = requestAnimationFrame(animate);
+    }
+
+    yesBtn.addEventListener("click", () => {
+      // Hide buttons/text, show thank you + canvas
+      main.style.display = "none";
+      thanks.style.display = "block";
+      canvas.style.display = "block";
+
+      // start animation + bursts
+      particles.length = 0;
+      spawnBurst(W * 0.5, H * 0.45, 160);
+      spawnBurst(W * 0.3, H * 0.55, 100);
+      spawnBurst(W * 0.7, H * 0.55, 100);
+
+      if (!animId) animate();
+
+      // Keep adding small bursts for a bit
+      let t = 0;
+      const timer = setInterval(() => {
+        t++;
+        spawnBurst(rand(W * 0.2, W * 0.8), rand(H * 0.2, H * 0.6), 60);
+        if (t >= 12) clearInterval(timer);
+      }, 350);
+    });
+  </script>
+</body>
+</html>
