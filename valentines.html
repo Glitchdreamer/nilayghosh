@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Valentine</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background: pink;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+        }
+        .container {
+            text-align: center;
+        }
+        h1 {
+            font-size: 40px;
+            font-weight: bold;
+            color: #b30059;
+        }
+        button {
+            font-size: 22px;
+            padding: 12px 30px;
+            margin: 20px;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        #yesBtn {
+            background: #ff3366;
+            color: white;
+        }
+        #noBtn {
+            background: white;
+            color: #ff3366;
+            position: absolute;
+        }
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            display: none;
+        }
+        .thankyou {
+            display: none;
+            color: white;
+            font-size: 50px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="main">
+        <h1>Sakshi will you be my Valentine 💕</h1>
+        <button id="yesBtn">Yes</button>
+        <button id="noBtn">No</button>
+    </div>
+    <canvas id="canvas"></canvas>
+    <div class="thankyou" id="thanks">
+        Thank You 💕
+    </div>
+    <script>
+        const noBtn = document.getElementById("noBtn");
+        const yesBtn = document.getElementById("yesBtn");
+        const main = document.getElementById("main");
+        const canvas = document.getElementById("canvas");
+        const thanks = document.getElementById("thanks");
+        const texts = [
+            "Are you sure?",
+            "Really?",
+            "Try again!!",
+            "You sure?",
+            "Haha nice try 😊",
+            "No escape!!",
+            "Nice try 😞",
+            "You can't escape love 💖"
+        ];
+        let index = 0;
+        noBtn.addEventListener("click", () => {
+            noBtn.innerText = texts[index % texts.length];
+            index++;
+            const x = Math.random() * (window.innerWidth - 150);
+            const y = Math.random() * (window.innerHeight - 100);
+            noBtn.style.left = x + "px";
+            noBtn.style.top = y + "px";
+        });
+        // Added to make "Yes" button functional
+        yesBtn.addEventListener("click", () => {
+            main.style.display = "none";
+            thanks.style.display = "block";
+            canvas.style.display = "block";
+            // Optional: Simple canvas setup to fill with a color for visibility
+            const ctx = canvas.getContext("2d");
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            ctx.fillStyle = "rgba(0, 0, 0, 0.5)"; // Semi-transparent black overlay
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        });
+    </script>
+</body>
+</html>
