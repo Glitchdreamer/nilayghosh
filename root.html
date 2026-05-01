@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>My ROOT Analyzer</title>
+  <script type="module">
+    import { openFile, draw } from 'https://root.cern/js/latest/modules/main.mjs';
+
+    window.analyze = async function() {
+      const url = document.getElementById('fileUrl').value;
+      const treeName = document.getElementById('treeName').value || 'ntuple'; // your tree name
+      const drawExpr = document.getElementById('drawExpr').value;   // e.g. "px:py" or "px" or "px>>h1(100,0,100)"
+      const cut = document.getElementById('cut').value || '';       // e.g. "py>0"
+
+      let file = await openFile(url || document.getElementById('fileInput').files[0]);
+      let tree = await file.readObject(treeName + ';1');
+
+      // This is exactly like tree->Draw("expr", "cut") in terminal!
+      await draw('drawingDiv', tree, drawExpr + (cut ? ';' + cut : ''));
+    };
+  </script>
+</head>
+<body>
+  <h1>ROOT Terminal-style Plotter</h1>
+
+  <input type="file" id="fileInput"> or remote URL: 
+  <input type="text" id="fileUrl" placeholder="https://.../myfile.root" size="60"><br><br>
+
+  Tree name: <input type="text" id="treeName" value="ntuple"><br>
+  Draw expression: <input type="text" id="drawExpr" value="px:py" placeholder="px:py or px>>hist(100,0,100)"><br>
+  Cut: <input type="text" id="cut" placeholder="py>5 && px<10"><br><br>
+
+  <button onclick="analyze()">Plot (like tree->Draw())</button>
+
+  <div id="drawingDiv" style="width:900px; height:600px; border:1px solid #ccc; margin-top:20px;"></div>
+</body>
+</html>
