@@ -587,7 +587,8 @@
 
     function resize() {
       const rect = canvas.getBoundingClientRect();
-      pixelRatio = window.devicePixelRatio || 1;
+      const isMobileLayout = window.matchMedia("(max-width: 860px)").matches;
+      pixelRatio = isMobileLayout ? 1 : (window.devicePixelRatio || 1);
       canvas.width = Math.max(1, Math.floor(rect.width * pixelRatio));
       canvas.height = Math.max(1, Math.floor(rect.height * pixelRatio));
       draw();
