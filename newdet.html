@@ -1,0 +1,1476 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Multi Detector Geometry Viewer</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f7f9;
+      --panel: #ffffff;
+      --ink: #17202a;
+      --muted: #667085;
+      --line: #d8dee8;
+      --accent: #0f766e;
+      --danger: #b42318;
+      --target: #d92d20;
+      --detector: #2563eb;
+      --normal: #7c3aed;
+      --orient: #059669;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: var(--bg);
+      display: grid;
+      grid-template-columns: 390px minmax(0, 1fr);
+      grid-template-areas: "controls viewer";
+    }
+
+    aside {
+      grid-area: controls;
+      background: var(--panel);
+      border-right: 1px solid var(--line);
+      padding: 20px;
+      overflow: auto;
+    }
+
+    main {
+      grid-area: viewer;
+      min-width: 0;
+      display: grid;
+      grid-template-rows: minmax(0, 1fr) auto;
+    }
+
+    h1 {
+      margin: 0 0 18px;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    fieldset {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      margin: 0 0 14px;
+    }
+
+    legend {
+      padding: 0 6px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 24px repeat(3, 1fr);
+      align-items: center;
+      gap: 8px;
+      margin: 8px 0;
+    }
+
+    .row.two {
+      grid-template-columns: 80px 1fr;
+    }
+
+    .check-row {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .check-row input {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--accent);
+    }
+
+    .row span {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    input, select {
+      width: 100%;
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 8px;
+      font: inherit;
+      background: white;
+    }
+
+    input:focus, select:focus {
+      outline: 2px solid color-mix(in srgb, var(--accent) 30%, transparent);
+      border-color: var(--accent);
+    }
+
+    button {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--ink);
+      font: inherit;
+      font-weight: 700;
+      padding: 9px 11px;
+      cursor: pointer;
+    }
+
+    button.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+
+    button.danger {
+      color: var(--danger);
+    }
+
+    .buttons {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .status {
+      min-height: 22px;
+      color: var(--danger);
+      font-size: 13px;
+      margin-top: 10px;
+    }
+
+    .status.ok {
+      color: var(--accent);
+    }
+
+    .upload-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 9px 13px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .upload-btn:hover { background: #0d655e; }
+
+    .export-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: #fff;
+      color: var(--ink);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 9px 13px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .export-btn:hover { background: var(--bg); border-color: var(--accent); color: var(--accent); }
+
+    .json-drop-zone {
+      border: 2px dashed var(--line);
+      border-radius: 8px;
+      padding: 12px 10px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--muted);
+      transition: border-color 0.2s, background 0.2s;
+      cursor: pointer;
+      margin-top: 6px;
+    }
+    .json-drop-zone.drag-over {
+      border-color: var(--accent);
+      background: color-mix(in srgb, var(--accent) 8%, transparent);
+      color: var(--accent);
+    }
+
+    .legend-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 18px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .key {
+      display: inline-flex;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      margin-right: 8px;
+      vertical-align: -1px;
+    }
+
+    .note {
+      margin-top: 16px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(#fbfcfe, #eef3f8);
+      touch-action: none;
+    }
+
+    footer {
+      border-top: 1px solid var(--line);
+      background: var(--panel);
+      padding: 10px 14px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    @media (max-width: 860px) {
+      body {
+        height: 100vh;
+        min-height: 100vh;
+        overflow: hidden;
+        grid-template-columns: 1fr;
+        grid-template-rows: 34vh minmax(0, 1fr);
+        grid-template-areas:
+          "viewer"
+          "controls";
+      }
+
+      aside {
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+        padding: 8px;
+        overflow: hidden;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        align-content: start;
+        gap: 7px;
+      }
+
+      main {
+        min-height: 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      h1 {
+        grid-column: 1 / -1;
+        font-size: 15px;
+        margin: 0;
+      }
+
+      fieldset {
+        padding: 7px;
+        margin: 0;
+        min-width: 0;
+      }
+
+      aside > fieldset:first-of-type {
+        grid-column: 1 / -1;
+      }
+
+      legend {
+        font-size: 10px;
+      }
+
+      .row {
+        grid-template-columns: 18px repeat(3, 1fr);
+        gap: 4px;
+        margin: 3px 0;
+      }
+
+      .row.two {
+        grid-template-columns: 48px 1fr;
+      }
+
+      .row span {
+        font-size: 10px;
+      }
+
+      input, select {
+        padding: 5px;
+        font-size: 12px;
+      }
+
+      .buttons {
+        grid-column: 1 / -1;
+        gap: 5px;
+        margin: 0;
+      }
+
+      button {
+        padding: 6px 8px;
+        font-size: 12px;
+      }
+
+      .check-row {
+        grid-column: 1 / -1;
+        margin: 0;
+        font-size: 12px;
+      }
+
+      .check-row input {
+        width: 16px;
+        height: 16px;
+      }
+
+      .status {
+        grid-column: 1 / -1;
+        min-height: 14px;
+        margin: 0;
+        font-size: 11px;
+      }
+
+      .legend-list,
+      .note {
+        display: none;
+      }
+
+      footer {
+        font-size: 12px;
+        line-height: 1.35;
+      }
+    }
+  </style>
+</head>
+<body>
+  <aside>
+    <h1>Multi Detector Geometry Viewer</h1>
+
+    <fieldset>
+      <legend>Detector</legend>
+      <div class="row two">
+        <span>Select</span>
+        <select id="detectorSelect"></select>
+      </div>
+      <div class="row two">
+        <span>Name</span>
+        <input id="name" type="text" value="Det1">
+      </div>
+      <div class="row two">
+        <span>Mode</span>
+        <select id="inputMode">
+          <option value="standard">Standard (Pos, Dir, Ori)</option>
+          <option value="corners">Corners (4 Points)</option>
+        </select>
+      </div>
+      <label class="check-row">
+        <input id="reverseFront" type="checkbox">
+        Reverse Front
+      </label>
+      <label class="check-row">
+        <input id="reverseBack" type="checkbox">
+        Reverse Back
+      </label>
+      <div class="buttons">
+        <button id="addDetector" class="primary">Add Detector</button>
+        <button id="duplicateDetector">Duplicate</button>
+        <button id="removeDetector" class="danger">Remove</button>
+      </div>
+    </fieldset>
+
+    <div id="standardInputs">
+      <fieldset>
+        <legend>Position</legend>
+        <div class="row">
+          <span></span><span>x</span><span>y</span><span>z</span>
+        </div>
+        <div class="row">
+          <span>mm</span>
+          <input id="px" type="number" step="0.1" value="-33">
+          <input id="py" type="number" step="0.1" value="0">
+          <input id="pz" type="number" step="0.1" value="0">
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Direction</legend>
+        <div class="row">
+          <span></span><span>x</span><span>y</span><span>z</span>
+        </div>
+        <div class="row">
+          <span>n</span>
+          <input id="dx" type="number" step="0.001" value="1">
+          <input id="dy" type="number" step="0.001" value="0">
+          <input id="dz" type="number" step="0.001" value="0">
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Orientation</legend>
+        <div class="row">
+          <span></span><span>x</span><span>y</span><span>z</span>
+        </div>
+        <div class="row">
+          <span>u</span>
+          <input id="ox" type="number" step="0.001" value="0">
+          <input id="oy" type="number" step="0.001" value="1">
+          <input id="oz" type="number" step="0.001" value="0">
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Size</legend>
+        <div class="row">
+          <span>mm</span>
+          <input id="width" type="number" step="1" value="45" title="Detector width">
+          <input id="height" type="number" step="1" value="45" title="Detector height">
+          <input id="scale" type="number" step="1" value="4" title="Base pixels per mm">
+        </div>
+      </fieldset>
+    </div>
+
+    <div id="cornersInputs" style="display: none;">
+      <fieldset>
+        <legend>Corner X1_Y1</legend>
+        <div class="row">
+          <span>mm</span>
+          <input id="c1x" type="number" step="0.1" value="0">
+          <input id="c1y" type="number" step="0.1" value="0">
+          <input id="c1z" type="number" step="0.1" value="0">
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Corner X16_Y1</legend>
+        <div class="row">
+          <span>mm</span>
+          <input id="c2x" type="number" step="0.1" value="0">
+          <input id="c2y" type="number" step="0.1" value="0">
+          <input id="c2z" type="number" step="0.1" value="0">
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Corner X1_Y16</legend>
+        <div class="row">
+          <span>mm</span>
+          <input id="c3x" type="number" step="0.1" value="0">
+          <input id="c3y" type="number" step="0.1" value="0">
+          <input id="c3z" type="number" step="0.1" value="0">
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Corner X16_Y16</legend>
+        <div class="row">
+          <span>mm</span>
+          <input id="c4x" type="number" step="0.1" value="0">
+          <input id="c4y" type="number" step="0.1" value="0">
+          <input id="c4z" type="number" step="0.1" value="0">
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Scale</legend>
+        <div class="row">
+          <span>px/mm</span>
+          <input id="scaleCorners" type="number" step="1" value="4" title="Base pixels per mm">
+          <span></span><span></span>
+        </div>
+      </fieldset>
+    </div>
+
+    <div class="buttons">
+      <button class="primary" id="draw">Draw</button>
+      <button id="faceTarget">Face Target</button>
+      <button id="resetView">Reset View</button>
+    </div>
+
+    <fieldset style="margin-top:14px;">
+      <legend>Import / Export JSON</legend>
+      <div
+        id="jsonDropZone"
+        class="json-drop-zone"
+        title="Drop a detector JSON file here or click to browse"
+      >
+        &#x1F4C2; Drop JSON here or click to browse
+      </div>
+      <input id="jsonFileInput" type="file" accept=".json,application/json" style="display:none;">
+      <div class="buttons" style="margin-top:8px;">
+        <button class="export-btn" id="exportJSON">&#x2193; Export JSON</button>
+      </div>
+    </fieldset>
+
+    <label class="check-row">
+      <input id="beamAxis" type="checkbox">
+      Add beam axis
+    </label>
+
+    <div id="status" class="status"></div>
+
+    <div class="legend-list">
+      <div><span class="key" style="background: var(--target)"></span>Target center</div>
+      <div><span class="key" style="background: var(--detector)"></span>Detector plane and center</div>
+      <div><span class="key" style="background: var(--normal)"></span>Direction / detector normal</div>
+      <div><span class="key" style="background: var(--orient)"></span>Orientation / detector up</div>
+      <div><span class="key" style="background: var(--target)"></span>Dotted red z beam axis</div>
+    </div>
+
+    <p class="note">
+      Drag to rotate. Use the mouse wheel or trackpad scroll over the canvas to zoom.
+      Labels, arrows, and points scale with the geometry.
+    </p>
+  </aside>
+
+  <main>
+    <canvas id="scene"></canvas>
+    <footer id="readout"></footer>
+  </main>
+
+  <script>
+    const canvas = document.getElementById("scene");
+    const ctx = canvas.getContext("2d");
+    const statusEl = document.getElementById("status");
+    const readoutEl = document.getElementById("readout");
+    const selectEl = document.getElementById("detectorSelect");
+    const beamAxisEl = document.getElementById("beamAxis");
+    const inputModeEl = document.getElementById("inputMode");
+    const standardInputsEl = document.getElementById("standardInputs");
+    const cornersInputsEl = document.getElementById("cornersInputs");
+    const ids = ["name", "px", "py", "pz", "dx", "dy", "dz", "ox", "oy", "oz", "width", "height", "scale", "c1x", "c1y", "c1z", "c2x", "c2y", "c2z", "c3x", "c3y", "c3z", "c4x", "c4y", "c4z", "scaleCorners"];
+    const inputs = Object.fromEntries(ids.map((id) => [id, document.getElementById(id)]));
+    const checkIds = ["reverseFront", "reverseBack"];
+    const checks = Object.fromEntries(checkIds.map((id) => [id, document.getElementById(id)]));
+
+    const palette = ["#2563eb", "#dc2626", "#16a34a", "#9333ea", "#ea580c", "#0891b2", "#be123c", "#4f46e5"];
+    let detectors = [
+      {
+        name: "Det1",
+        inputMode: "standard",
+        showCorners: false,
+        reverseFront: false,
+        reverseBack: false,
+        position: [-33, 0, 0],
+        direction: [1, 0, 0],
+        orientation: [0, 1, 0],
+        width: 45,
+        height: 45,
+        scale: 4
+      }
+    ];
+    let selected = 0;
+    let yaw = -0.75;
+    let pitch = 0.45;
+    let zoom = 2;
+    let dragging = false;
+    let pinching = false;
+    let pinchStartDistance = 0;
+    let pinchStartZoom = 2;
+    let lastMouse = { x: 0, y: 0 };
+    const activePointers = new Map();
+    let clickStart = { x: 0, y: 0 };
+    let clickTime = 0;
+
+    function vec(x, y, z) {
+      return { x, y, z };
+    }
+
+    function fromArray(a) {
+      return vec(a[0], a[1], a[2]);
+    }
+
+    function toArray(v) {
+      return [v.x, v.y, v.z];
+    }
+
+    function add(a, b) {
+      return vec(a.x + b.x, a.y + b.y, a.z + b.z);
+    }
+
+    function sub(a, b) {
+      return vec(a.x - b.x, a.y - b.y, a.z - b.z);
+    }
+
+    function mul(a, s) {
+      return vec(a.x * s, a.y * s, a.z * s);
+    }
+
+    function dot(a, b) {
+      return a.x * b.x + a.y * b.y + a.z * b.z;
+    }
+
+    function cross(a, b) {
+      return vec(
+        a.y * b.z - a.z * b.y,
+        a.z * b.x - a.x * b.z,
+        a.x * b.y - a.y * b.x
+      );
+    }
+
+    function mag(a) {
+      return Math.hypot(a.x, a.y, a.z);
+    }
+
+    function norm(a) {
+      const m = mag(a);
+      if (m === 0) throw new Error("Vector length cannot be zero.");
+      return mul(a, 1 / m);
+    }
+
+    function value(id) {
+      const n = Number(inputs[id].value);
+      if (!Number.isFinite(n)) throw new Error(`Invalid value in ${id}.`);
+      return n;
+    }
+
+    function getDetectorCorners(detector) {
+      const b = detectorBasis(detector);
+      const center = fromArray(detector.position);
+      const hw = detector.width / 2;
+      const hh = detector.height / 2;
+      return [
+        add(add(center, mul(b.right, -hw)), mul(b.up, -hh)),
+        add(add(center, mul(b.right, hw)), mul(b.up, -hh)),
+        add(add(center, mul(b.right, hw)), mul(b.up, hh)),
+        add(add(center, mul(b.right, -hw)), mul(b.up, hh))
+      ];
+    }
+
+    function detectorFromInputs() {
+      const mode = inputModeEl.value;
+      const base = {
+        name: inputs.name.value.trim() || `Detector ${selected + 1}`,
+        inputMode: mode,
+        showCorners: detectors[selected]?.showCorners || false,
+        reverseFront: checks.reverseFront.checked,
+        reverseBack: checks.reverseBack.checked
+      };
+
+      if (mode === "standard") {
+        return {
+          ...base,
+          position: [value("px"), value("py"), value("pz")],
+          direction: [value("dx"), value("dy"), value("dz")],
+          orientation: [value("ox"), value("oy"), value("oz")],
+          width: Math.max(1, value("width")),
+          height: Math.max(1, value("height")),
+          scale: Math.max(1, value("scale"))
+        };
+      } else {
+        const c1 = vec(value("c1x"), value("c1y"), value("c1z")); // X1_Y1
+        const c2 = vec(value("c2x"), value("c2y"), value("c2z")); // X16_Y1
+        const c3 = vec(value("c3x"), value("c3y"), value("c3z")); // X1_Y16
+        const c4 = vec(value("c4x"), value("c4y"), value("c4z")); // X16_Y16
+        
+        let wVec = sub(c1, c2); 
+        let hVec = sub(c1, c3);
+        
+        if (base.reverseFront) wVec = mul(wVec, -1);
+        if (base.reverseBack) hVec = mul(hVec, -1);
+        
+        const width = mag(wVec);
+        const height = mag(hVec);
+        
+        const horizontal = width > 0 ? norm(wVec) : vec(1, 0, 0);
+        const up = height > 0 ? norm(hVec) : vec(0, 1, 0);
+        
+        const n = cross(up, horizontal);
+        
+        // Compute center as average of all 4 corners
+        const center = mul(add(add(c1, c2), add(c3, c4)), 0.25);
+        
+        return {
+          ...base,
+          position: toArray(center),
+          direction: toArray(n),
+          orientation: toArray(up),
+          width: Math.max(1, width),
+          height: Math.max(1, height),
+          scale: Math.max(1, value("scaleCorners"))
+        };
+      }
+    }
+
+    function syncInputs() {
+      const d = detectors[selected];
+      inputs.name.value = d.name;
+      inputModeEl.value = d.inputMode || "standard";
+      
+      checks.reverseFront.checked = d.reverseFront || false;
+      checks.reverseBack.checked = d.reverseBack || false;
+      
+      standardInputsEl.style.display = inputModeEl.value === "standard" ? "block" : "none";
+      cornersInputsEl.style.display = inputModeEl.value === "corners" ? "block" : "none";
+
+      const fmt = (n) => Number.isInteger(n) ? n : Number(n.toFixed(3));
+
+      inputs.px.value = fmt(d.position[0]);
+      inputs.py.value = fmt(d.position[1]);
+      inputs.pz.value = fmt(d.position[2]);
+      inputs.dx.value = fmt(d.direction[0]);
+      inputs.dy.value = fmt(d.direction[1]);
+      inputs.dz.value = fmt(d.direction[2]);
+      inputs.ox.value = fmt(d.orientation[0]);
+      inputs.oy.value = fmt(d.orientation[1]);
+      inputs.oz.value = fmt(d.orientation[2]);
+      inputs.width.value = fmt(d.width);
+      inputs.height.value = fmt(d.height);
+      inputs.scale.value = d.scale;
+      inputs.scaleCorners.value = d.scale;
+
+      const corners = getDetectorCorners(d);
+      
+      const TL = corners[3];
+      const TR = corners[2];
+      const BL = corners[0];
+      const BR = corners[1];
+      
+      const rF = d.reverseFront;
+      const rB = d.reverseBack;
+
+      const p_X1_Y1 = rF ? (rB ? BR : TR) : (rB ? BL : TL);
+      const p_X16_Y1 = rF ? (rB ? BL : TL) : (rB ? BR : TR);
+      const p_X1_Y16 = rF ? (rB ? TR : BR) : (rB ? TL : BL);
+      const p_X16_Y16 = rF ? (rB ? TL : BL) : (rB ? TR : BR);
+      
+      inputs.c1x.value = fmt(p_X1_Y1.x);
+      inputs.c1y.value = fmt(p_X1_Y1.y);
+      inputs.c1z.value = fmt(p_X1_Y1.z);
+
+      inputs.c2x.value = fmt(p_X16_Y1.x);
+      inputs.c2y.value = fmt(p_X16_Y1.y);
+      inputs.c2z.value = fmt(p_X16_Y1.z);
+
+      inputs.c3x.value = fmt(p_X1_Y16.x);
+      inputs.c3y.value = fmt(p_X1_Y16.y);
+      inputs.c3z.value = fmt(p_X1_Y16.z);
+
+      inputs.c4x.value = fmt(p_X16_Y16.x);
+      inputs.c4y.value = fmt(p_X16_Y16.y);
+      inputs.c4z.value = fmt(p_X16_Y16.z);
+    }
+
+    function syncSelect() {
+      selectEl.innerHTML = "";
+      detectors.forEach((d, i) => {
+        const option = document.createElement("option");
+        option.value = String(i);
+        option.textContent = `${i + 1}. ${d.name}`;
+        selectEl.appendChild(option);
+      });
+      selectEl.value = String(selected);
+    }
+
+    function updateSelected() {
+      try {
+        detectors[selected] = detectorFromInputs();
+        syncSelect();
+        draw();
+      } catch (err) {
+        statusEl.textContent = err.message;
+      }
+    }
+
+    function detectorBasis(detector) {
+      const n = norm(fromArray(detector.direction));
+      const rawUp = fromArray(detector.orientation);
+      const parallel = mul(n, dot(rawUp, n));
+      const upCandidate = sub(rawUp, parallel);
+      if (mag(upCandidate) < 1e-9) {
+        throw new Error(`${detector.name}: orientation is parallel to direction.`);
+      }
+      const up = norm(upCandidate);
+      const right = norm(cross(up, n));
+      return { n, up, right };
+    }
+
+    function rotate(p) {
+      const cy = Math.cos(yaw);
+      const sy = Math.sin(yaw);
+      const cp = Math.cos(pitch);
+      const sp = Math.sin(pitch);
+
+      const x1 = cy * p.x + sy * p.z;
+      const z1 = -sy * p.x + cy * p.z;
+      const y1 = p.y;
+
+      return vec(x1, cp * y1 - sp * z1, sp * y1 + cp * z1);
+    }
+
+    function activeScale() {
+      const selectedScale = detectors[selected]?.scale || 4;
+      return selectedScale * zoom;
+    }
+
+    function uiScale() {
+      return Math.max(0.65, Math.min(3.8, zoom));
+    }
+
+    function project(p, scale) {
+      const r = rotate(p);
+      return {
+        x: canvas.width / 2 + r.x * scale,
+        y: canvas.height / 2 - r.y * scale,
+        z: r.z
+      };
+    }
+
+    function resize() {
+      const rect = canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = Math.max(1, Math.floor(rect.width * dpr));
+      canvas.height = Math.max(1, Math.floor(rect.height * dpr));
+      draw();
+    }
+
+    function line(a, b, color, width = 2) {
+      ctx.strokeStyle = color;
+      ctx.lineWidth = width * uiScale();
+      ctx.beginPath();
+      ctx.moveTo(a.x, a.y);
+      ctx.lineTo(b.x, b.y);
+      ctx.stroke();
+    }
+
+    function label(text, p, color = "#17202a", weight = 600) {
+      const size = 13 * uiScale();
+      ctx.fillStyle = color;
+      ctx.font = `${weight} ${size}px system-ui, sans-serif`;
+      ctx.fillText(text, p.x + 9 * uiScale(), p.y - 9 * uiScale());
+    }
+
+    function circle(p, radius, color, text) {
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, radius * uiScale(), 0, Math.PI * 2);
+      ctx.fill();
+      if (text) label(text, p, color);
+    }
+
+    function arrow(from, to, color, text) {
+      line(from, to, color, 3);
+      const angle = Math.atan2(to.y - from.y, to.x - from.x);
+      const head = 10 * uiScale();
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.moveTo(to.x, to.y);
+      ctx.lineTo(to.x - head * Math.cos(angle - 0.55), to.y - head * Math.sin(angle - 0.55));
+      ctx.lineTo(to.x - head * Math.cos(angle + 0.55), to.y - head * Math.sin(angle + 0.55));
+      ctx.closePath();
+      ctx.fill();
+      if (text) label(text, to, color, 700);
+    }
+
+    function dottedLine(a, b, color, width = 2) {
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = width * uiScale();
+      ctx.setLineDash([8 * uiScale(), 8 * uiScale()]);
+      ctx.beginPath();
+      ctx.moveTo(a.x, a.y);
+      ctx.lineTo(b.x, b.y);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawBeamAxis(scale) {
+      const extent = 10000;
+      dottedLine(
+        project(vec(0, 0, -extent), scale),
+        project(vec(0, 0, extent), scale),
+        "#d92d20",
+        2
+      );
+    }
+
+    function drawGrid(scale) {
+      const extent = 120;
+      const color = "#d8dee8";
+      for (let v = -extent; v <= extent; v += 20) {
+        line(project(vec(v, 0, -extent), scale), project(vec(v, 0, extent), scale), color, 1);
+        line(project(vec(-extent, 0, v), scale), project(vec(extent, 0, v), scale), color, 1);
+      }
+      arrow(project(vec(0, 0, 0), scale), project(vec(35, 0, 0), scale), "#98a2b3", "x");
+      arrow(project(vec(0, 0, 0), scale), project(vec(0, 35, 0), scale), "#98a2b3", "y");
+      arrow(project(vec(0, 0, 0), scale), project(vec(0, 0, 35), scale), "#98a2b3", "z");
+    }
+
+    function drawDetector(detector, index, scale) {
+      const b = detectorBasis(detector);
+      const center = fromArray(detector.position);
+      const hw = detector.width / 2;
+      const hh = detector.height / 2;
+      const color = palette[index % palette.length];
+      const corners = [
+        add(add(center, mul(b.right, -hw)), mul(b.up, -hh)),
+        add(add(center, mul(b.right, hw)), mul(b.up, -hh)),
+        add(add(center, mul(b.right, hw)), mul(b.up, hh)),
+        add(add(center, mul(b.right, -hw)), mul(b.up, hh))
+      ].map((p) => project(p, scale));
+
+      ctx.fillStyle = index === selected ? `${color}30` : `${color}18`;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = (index === selected ? 3 : 2) * uiScale();
+      ctx.beginPath();
+      ctx.moveTo(corners[0].x, corners[0].y);
+      for (let i = 1; i < corners.length; i++) ctx.lineTo(corners[i].x, corners[i].y);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      if (detector.showCorners) {
+        const c3d = getDetectorCorners(detector);
+        const fmtCorner = (p3d) => `(${p3d.x.toFixed(1)}, ${p3d.y.toFixed(1)}, ${p3d.z.toFixed(1)})`;
+        
+        const rF = detector.reverseFront;
+        const rB = detector.reverseBack;
+        
+        const p_X1_Y1 = rF ? (rB ? c3d[1] : c3d[2]) : (rB ? c3d[0] : c3d[3]);
+        const p_X16_Y1 = rF ? (rB ? c3d[0] : c3d[3]) : (rB ? c3d[1] : c3d[2]);
+        const p_X1_Y16 = rF ? (rB ? c3d[2] : c3d[1]) : (rB ? c3d[3] : c3d[0]);
+        const p_X16_Y16 = rF ? (rB ? c3d[3] : c3d[0]) : (rB ? c3d[2] : c3d[1]);
+        
+        const c_X1_Y1 = rF ? (rB ? corners[1] : corners[2]) : (rB ? corners[0] : corners[3]);
+        const c_X16_Y1 = rF ? (rB ? corners[0] : corners[3]) : (rB ? corners[1] : corners[2]);
+        const c_X1_Y16 = rF ? (rB ? corners[2] : corners[1]) : (rB ? corners[3] : corners[0]);
+        const c_X16_Y16 = rF ? (rB ? corners[3] : corners[0]) : (rB ? corners[2] : corners[1]);
+
+        label(`X1_Y1: ${fmtCorner(p_X1_Y1)}`, c_X1_Y1, color);
+        label(`X16_Y1: ${fmtCorner(p_X16_Y1)}`, c_X16_Y1, color);
+        label(`X1_Y16: ${fmtCorner(p_X1_Y16)}`, c_X1_Y16, color);
+        label(`X16_Y16: ${fmtCorner(p_X16_Y16)}`, c_X16_Y16, color);
+      }
+
+      const target = project(vec(0, 0, 0), scale);
+      const detectorCenter = project(center, scale);
+      line(target, detectorCenter, "#667085", 1.2);
+      circle(detectorCenter, 5, color, detector.name);
+      arrow(detectorCenter, project(add(center, mul(b.n, 18)), scale), "#7c3aed", index === selected ? "direction" : "");
+      arrow(detectorCenter, project(add(center, mul(b.up, 18)), scale), "#059669", index === selected ? "orientation" : "");
+
+      if (detector.showCoverage) {
+        try {
+          const cov = computeCoverage(detector);
+          const ui = uiScale();
+          const lh = 16 * ui;  // line height
+          const px = detectorCenter.x + 12 * ui;
+          const py = detectorCenter.y - 4 * ui;
+          ctx.font = `700 ${13 * ui}px system-ui, sans-serif`;
+
+          const lines = [
+            `θ: ${cov.thetaMin.toFixed(1)}° – ${cov.thetaMax.toFixed(1)}°`,
+            `φ: ${cov.phiMin.toFixed(1)}° – ${cov.phiMax.toFixed(1)}°`
+          ];
+          const maxW = Math.max(...lines.map(l => ctx.measureText(l).width));
+          const pad = 6 * ui;
+          ctx.fillStyle = "rgba(255,255,255,0.90)";
+          ctx.beginPath();
+          ctx.roundRect(px - pad, py - lh, maxW + pad * 2, lh * lines.length + pad * 1.5, 5 * ui);
+          ctx.fill();
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 1.5 * ui;
+          ctx.stroke();
+
+          ctx.fillStyle = color;
+          lines.forEach((txt, li) => {
+            ctx.fillText(txt, px, py + li * lh);
+          });
+        } catch(_) {}
+      }
+    }
+
+    /**
+     * Compute the theta [0°,180°] and phi [-180°,180°] coverage of a detector
+     * as seen from the origin (target).
+     * Returns { thetaMin, thetaMax, phiMin, phiMax } in degrees.
+     */
+    function computeCoverage(detector) {
+      const b = detectorBasis(detector);
+      const center = fromArray(detector.position);
+      const hw = detector.width / 2;
+      const hh = detector.height / 2;
+      const corners3d = [
+        add(add(center, mul(b.right, -hw)), mul(b.up, -hh)),
+        add(add(center, mul(b.right,  hw)), mul(b.up, -hh)),
+        add(add(center, mul(b.right,  hw)), mul(b.up,  hh)),
+        add(add(center, mul(b.right, -hw)), mul(b.up,  hh))
+      ];
+
+      let thetaMin = Infinity, thetaMax = -Infinity;
+      let phiMin   = Infinity, phiMax   = -Infinity;
+
+      corners3d.forEach(p => {
+        const r = mag(p);
+        if (r < 1e-9) return;
+        const theta = Math.acos(Math.max(-1, Math.min(1, p.z / r))) * 180 / Math.PI;
+        const phi   = ((Math.atan2(p.y, p.x) * 180 / Math.PI) + 360) % 360;
+        if (theta < thetaMin) thetaMin = theta;
+        if (theta > thetaMax) thetaMax = theta;
+        if (phi   < phiMin)   phiMin   = phi;
+        if (phi   > phiMax)   phiMax   = phi;
+      });
+
+      return { thetaMin, thetaMax, phiMin, phiMax };
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      try {
+        statusEl.textContent = "";
+        const scale = activeScale();
+        drawGrid(scale);
+        if (beamAxisEl.checked) drawBeamAxis(scale);
+        const target = project(vec(0, 0, 0), scale);
+        circle(target, 6, "#d92d20", "target center");
+        detectors.forEach((detector, index) => drawDetector(detector, index, scale));
+
+        const d = detectors[selected];
+        const b = detectorBasis(d);
+        const center = fromArray(d.position);
+        const distance = mag(center).toFixed(2);
+        const angleToTarget = center.x || center.y || center.z
+          ? Math.acos(Math.max(-1, Math.min(1, dot(b.n, norm(mul(center, -1)))))) * 180 / Math.PI
+          : 0;
+        const cov = computeCoverage(d);
+        const covStr = d.showCoverage
+          ? ` | θ: ${cov.thetaMin.toFixed(1)}°–${cov.thetaMax.toFixed(1)}° | φ: ${cov.phiMin.toFixed(1)}°–${cov.phiMax.toFixed(1)}°`
+          : "";
+        readoutEl.textContent =
+          `${d.name}: dist ${distance} mm | dir-target angle ${angleToTarget.toFixed(2)}°${covStr} | zoom ${zoom.toFixed(2)}x`;
+      } catch (err) {
+        statusEl.textContent = err.message;
+        readoutEl.textContent = "";
+      }
+    }
+
+    function addDetector() {
+      updateSelected();
+      const n = detectors.length + 1;
+      detectors.push({
+        name: `Det${n}`,
+        inputMode: inputModeEl.value,
+        showCorners: false,
+        reverseFront: false,
+        reverseBack: false,
+        position: [33, 0, 0],
+        direction: [-1, 0, 0],
+        orientation: [0, 1, 0],
+        width: 45,
+        height: 45,
+        scale: detectors[selected]?.scale || 4
+      });
+      selected = detectors.length - 1;
+      syncSelect();
+      syncInputs();
+      draw();
+    }
+
+    function duplicateDetector() {
+      updateSelected();
+      const copy = JSON.parse(JSON.stringify(detectors[selected]));
+      copy.name = `${copy.name}_copy`;
+      detectors.push(copy);
+      selected = detectors.length - 1;
+      syncSelect();
+      syncInputs();
+      draw();
+    }
+
+    function removeDetector() {
+      if (detectors.length === 1) {
+        statusEl.textContent = "At least one detector must remain.";
+        return;
+      }
+      detectors.splice(selected, 1);
+      selected = Math.max(0, selected - 1);
+      syncSelect();
+      syncInputs();
+      draw();
+    }
+
+    function faceTarget() {
+      try {
+        const p = vec(value("px"), value("py"), value("pz"));
+        const d = norm(mul(p, -1));
+        inputs.dx.value = d.x.toFixed(6);
+        inputs.dy.value = d.y.toFixed(6);
+        inputs.dz.value = d.z.toFixed(6);
+        updateSelected();
+      } catch (err) {
+        statusEl.textContent = err.message;
+      }
+    }
+
+    function resetView() {
+      yaw = -0.75;
+      pitch = 0.45;
+      zoom = 2;
+      draw();
+    }
+
+    // ── JSON import / export ────────────────────────────────────────────────
+
+    const REQUIRED_STANDARD = ["name","position","direction","orientation","width","height"];
+    const REQUIRED_CORNERS  = ["name","corners"];
+
+    function showStatus(msg, isOk = false) {
+      statusEl.textContent = msg;
+      statusEl.className = "status" + (isOk ? " ok" : "");
+      if (isOk) setTimeout(() => { if (statusEl.textContent === msg) { statusEl.textContent = ""; statusEl.className = "status"; } }, 3500);
+    }
+
+    /**
+     * Accept a parsed JSON value (array or object with a `detectors` key).
+     * Each entry may use either the standard schema:
+     *   { name, inputMode?, position:[x,y,z], direction:[x,y,z],
+     *     orientation:[x,y,z], width, height, scale?,
+     *     reverseFront?, reverseBack? }
+     * or the corners schema:
+     *   { name, inputMode:"corners",
+     *     corners: { X1_Y1:[x,y,z], X16_Y1:[x,y,z],
+     *                X1_Y16:[x,y,z], X16_Y16:[x,y,z] },
+     *     scale?, reverseFront?, reverseBack? }
+     */
+    function loadFromJSON(data) {
+      let list = Array.isArray(data) ? data : (data.detectors ?? null);
+      if (!Array.isArray(list) || list.length === 0)
+        throw new Error("JSON must be an array (or object with \"detectors\" array) with at least one entry.");
+
+      const result = list.map((raw, idx) => {
+        const label = raw.name ?? `#${idx + 1}`;
+        const mode  = raw.inputMode ?? "standard";
+
+        if (mode === "corners") {
+          // corners mode
+          if (!raw.corners) throw new Error(`Detector ${label}: missing \"corners\" object.`);
+          const cn = raw.corners;
+          const ckeys = ["X1_Y1","X16_Y1","X1_Y16","X16_Y16"];
+          ckeys.forEach(k => {
+            if (!Array.isArray(cn[k]) || cn[k].length !== 3)
+              throw new Error(`Detector ${label}: corners.${k} must be [x,y,z].`);
+          });
+          const c1 = vec(...cn.X1_Y1);
+          const c2 = vec(...cn.X16_Y1);
+          const c3 = vec(...cn.X1_Y16);
+          const c4 = vec(...cn.X16_Y16);
+
+          const rF = !!raw.reverseFront;
+          const rB = !!raw.reverseBack;
+
+          let wVec = sub(c1, c2);
+          let hVec = sub(c1, c3);
+          if (rF) wVec = mul(wVec, -1);
+          if (rB) hVec = mul(hVec, -1);
+
+          const width  = mag(wVec);
+          const height = mag(hVec);
+          const horizontal = width  > 0 ? norm(wVec) : vec(1,0,0);
+          const up         = height > 0 ? norm(hVec) : vec(0,1,0);
+          const n          = cross(up, horizontal);
+          const center     = mul(add(add(c1,c2), add(c3,c4)), 0.25);
+
+          return {
+            name: String(raw.name ?? `Det${idx+1}`),
+            inputMode: "corners",
+            showCorners: false,
+            reverseFront: rF,
+            reverseBack:  rB,
+            position:    toArray(center),
+            direction:   toArray(n),
+            orientation: toArray(up),
+            width:  Math.max(1, width),
+            height: Math.max(1, height),
+            scale:  Math.max(1, Number(raw.scale) || 4)
+          };
+        } else {
+          // standard mode
+          const check = (key) => {
+            if (!Array.isArray(raw[key]) || raw[key].length !== 3)
+              throw new Error(`Detector ${label}: \"${key}\" must be [x, y, z].`);
+          };
+          ["position","direction","orientation"].forEach(check);
+          if (!Number.isFinite(Number(raw.width))  || Number(raw.width)  <= 0)
+            throw new Error(`Detector ${label}: \"width\" must be a positive number.`);
+          if (!Number.isFinite(Number(raw.height)) || Number(raw.height) <= 0)
+            throw new Error(`Detector ${label}: \"height\" must be a positive number.`);
+
+          return {
+            name:        String(raw.name ?? `Det${idx+1}`),
+            inputMode:   "standard",
+            showCorners: false,
+            reverseFront: !!raw.reverseFront,
+            reverseBack:  !!raw.reverseBack,
+            position:    raw.position.map(Number),
+            direction:   raw.direction.map(Number),
+            orientation: raw.orientation.map(Number),
+            width:  Math.max(1, Number(raw.width)),
+            height: Math.max(1, Number(raw.height)),
+            scale:  Math.max(1, Number(raw.scale) || 4)
+          };
+        }
+      });
+
+      detectors = result;
+      selected = 0;
+      syncSelect();
+      syncInputs();
+      draw();
+      showStatus(`✓ Loaded ${result.length} detector(s) from JSON.`, true);
+    }
+
+    function handleJSONFile(file) {
+      if (!file) return;
+      if (!file.name.toLowerCase().endsWith(".json") && file.type !== "application/json") {
+        showStatus("Please select a .json file.");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = JSON.parse(e.target.result);
+          loadFromJSON(data);
+        } catch (err) {
+          showStatus(err.message);
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function exportJSON() {
+      // Save current edits first
+      try { detectors[selected] = detectorFromInputs(); } catch(_) {}
+
+      const fmt3 = (v) => [+v.x.toFixed(4), +v.y.toFixed(4), +v.z.toFixed(4)];
+
+      const out = { detectors: detectors.map(d => {
+        const base = {
+          name:         d.name,
+          inputMode:    d.inputMode ?? "standard",
+          reverseFront: d.reverseFront ?? false,
+          reverseBack:  d.reverseBack  ?? false,
+          scale:        d.scale
+        };
+
+        if ((d.inputMode ?? "standard") === "corners") {
+          // Reconstruct the four labelled corner positions using the same
+          // mapping that syncInputs() and drawDetector() use.
+          const c3d = getDetectorCorners(d);   // [BL, BR, TR, TL]
+          const TL = c3d[3], TR = c3d[2], BL = c3d[0], BR = c3d[1];
+          const rF = d.reverseFront, rB = d.reverseBack;
+          const p_X1_Y1   = rF ? (rB ? BR : TR) : (rB ? BL : TL);
+          const p_X16_Y1  = rF ? (rB ? BL : TL) : (rB ? BR : TR);
+          const p_X1_Y16  = rF ? (rB ? TR : BR) : (rB ? TL : BL);
+          const p_X16_Y16 = rF ? (rB ? TL : BL) : (rB ? TR : BR);
+          return {
+            ...base,
+            corners: {
+              X1_Y1:   fmt3(p_X1_Y1),
+              X16_Y1:  fmt3(p_X16_Y1),
+              X1_Y16:  fmt3(p_X1_Y16),
+              X16_Y16: fmt3(p_X16_Y16)
+            }
+          };
+        } else {
+          return {
+            ...base,
+            position:    d.position,
+            direction:   d.direction,
+            orientation: d.orientation,
+            width:       d.width,
+            height:      d.height
+          };
+        }
+      }) };
+
+      const blob = new Blob([JSON.stringify(out, null, 2)], { type: "application/json" });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement("a");
+      a.href     = url;
+      a.download = "detectors.json";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // Wire up file input
+    const jsonFileInput = document.getElementById("jsonFileInput");
+    const jsonDropZone  = document.getElementById("jsonDropZone");
+
+    jsonDropZone.addEventListener("click",      () => jsonFileInput.click());
+    jsonFileInput.addEventListener("change",    (e) => { handleJSONFile(e.target.files[0]); e.target.value = ""; });
+    document.getElementById("exportJSON").addEventListener("click", exportJSON);
+
+    // Drag-and-drop support
+    jsonDropZone.addEventListener("dragover",  (e) => { e.preventDefault(); jsonDropZone.classList.add("drag-over"); });
+    jsonDropZone.addEventListener("dragleave", ()  => jsonDropZone.classList.remove("drag-over"));
+    jsonDropZone.addEventListener("drop",      (e) => {
+      e.preventDefault();
+      jsonDropZone.classList.remove("drag-over");
+      handleJSONFile(e.dataTransfer.files[0]);
+    });
+
+    // ── existing event listeners ────────────────────────────────────────────
+    ids.forEach((id) => inputs[id].addEventListener("input", updateSelected));
+    checkIds.forEach((id) => checks[id].addEventListener("change", updateSelected));
+    inputModeEl.addEventListener("change", () => {
+      detectors[selected].inputMode = inputModeEl.value;
+      syncInputs();
+    });
+    selectEl.addEventListener("change", () => {
+      const nextSelected = Number(selectEl.value);
+      detectors[selected] = detectorFromInputs();
+      selected = nextSelected;
+      syncInputs();
+      syncSelect();
+      draw();
+    });
+    document.getElementById("draw").addEventListener("click", draw);
+    document.getElementById("addDetector").addEventListener("click", addDetector);
+    document.getElementById("duplicateDetector").addEventListener("click", duplicateDetector);
+    document.getElementById("removeDetector").addEventListener("click", removeDetector);
+    document.getElementById("faceTarget").addEventListener("click", faceTarget);
+    document.getElementById("resetView").addEventListener("click", resetView);
+    beamAxisEl.addEventListener("change", draw);
+
+    canvas.addEventListener("wheel", (event) => {
+      event.preventDefault();
+      const factor = Math.exp(-event.deltaY * 0.001);
+      zoom = Math.max(0.2, Math.min(8, zoom * factor));
+      draw();
+    }, { passive: false });
+
+    canvas.addEventListener("pointerdown", (event) => {
+      activePointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      canvas.setPointerCapture(event.pointerId);
+      if (activePointers.size === 2) {
+        const points = [...activePointers.values()];
+        pinchStartDistance = Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y);
+        pinchStartZoom = zoom;
+        pinching = true;
+        dragging = false;
+      } else if (activePointers.size === 1) {
+        dragging = true;
+        pinching = false;
+        lastMouse = { x: event.clientX, y: event.clientY };
+        clickStart = { x: event.clientX, y: event.clientY };
+        clickTime = performance.now();
+      }
+    });
+
+    canvas.addEventListener("pointermove", (event) => {
+      if (activePointers.has(event.pointerId)) {
+        activePointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      }
+      if (pinching && activePointers.size >= 2) {
+        const points = [...activePointers.values()];
+        const distance = Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y);
+        if (pinchStartDistance > 0) {
+          zoom = Math.max(0.2, Math.min(8, pinchStartZoom * distance / pinchStartDistance));
+          draw();
+        }
+        return;
+      }
+      if (!dragging) return;
+      const dx = event.clientX - lastMouse.x;
+      const dy = event.clientY - lastMouse.y;
+      yaw += dx * 0.008;
+      pitch = Math.max(-1.35, Math.min(1.35, pitch + dy * 0.008));
+      lastMouse = { x: event.clientX, y: event.clientY };
+      draw();
+    });
+
+    function pointInPolygon(point, vs) {
+      let x = point.x, y = point.y;
+      let inside = false;
+      for (let i = 0, j = vs.length - 1; i < vs.length; j = i++) {
+        let xi = vs[i].x, yi = vs[i].y;
+        let xj = vs[j].x, yj = vs[j].y;
+        let intersect = ((yi > y) !== (yj > y))
+            && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+        if (intersect) inside = !inside;
+      }
+      return inside;
+    }
+
+    function handleCanvasClick(event) {
+      const rect = canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      const x = (event.clientX - rect.left) * dpr;
+      const y = (event.clientY - rect.top) * dpr;
+      const clickPoint = { x, y };
+
+      const scale = activeScale();
+      
+      for (let i = detectors.length - 1; i >= 0; i--) {
+        const d = detectors[i];
+        const b = detectorBasis(d);
+        const center = fromArray(d.position);
+        const hw = d.width / 2;
+        const hh = d.height / 2;
+        
+        const corners = [
+          add(add(center, mul(b.right, -hw)), mul(b.up, -hh)),
+          add(add(center, mul(b.right, hw)), mul(b.up, -hh)),
+          add(add(center, mul(b.right, hw)), mul(b.up, hh)),
+          add(add(center, mul(b.right, -hw)), mul(b.up, hh))
+        ].map((p) => project(p, scale));
+
+        if (pointInPolygon(clickPoint, corners)) {
+          // First click: show coverage; second click: also show corners; third: reset both
+          if (!d.showCoverage && !d.showCorners) {
+            d.showCoverage = true;
+          } else if (d.showCoverage && !d.showCorners) {
+            d.showCorners = true;
+          } else {
+            d.showCoverage = false;
+            d.showCorners  = false;
+          }
+          draw();
+          return;
+        }
+      }
+    }
+
+    function endPointer(event) {
+      if (activePointers.size === 1 && !pinching) {
+        const dx = event.clientX - clickStart.x;
+        const dy = event.clientY - clickStart.y;
+        if (Math.hypot(dx, dy) < 5 && performance.now() - clickTime < 300) {
+           handleCanvasClick(event);
+        }
+      }
+
+      activePointers.delete(event.pointerId);
+      pinching = false;
+      if (activePointers.size === 1) {
+        const point = [...activePointers.values()][0];
+        dragging = true;
+        lastMouse = { x: point.x, y: point.y };
+      } else {
+        dragging = false;
+      }
+    }
+
+    canvas.addEventListener("pointerup", endPointer);
+    canvas.addEventListener("pointercancel", endPointer);
+
+    window.addEventListener("resize", resize);
+    syncSelect();
+    syncInputs();
+    resize();
+  </script>
+</body>
+</html>
